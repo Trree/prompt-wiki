@@ -661,10 +661,6 @@ code {
   gap: 24px;
 }
 
-.knowledge-graph-section.obsidian-style {
-  position: relative;
-}
-
 .graph-settings-panel {
   position: absolute;
   top: 24px;
@@ -778,41 +774,6 @@ code {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-}
-
-/* Node/Line Polish */
-.obsidian-style .node-label {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(4px);
-  transition: all 0.2s ease;
-  font-weight: 600;
-  font-size: 10px;
-}
-
-.obsidian-style .graph-node-dot.label-visible .node-label {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.obsidian-style .knowledge-graph-lines line {
-  stroke: var(--border);
-  stroke-width: 1;
-  stroke-opacity: 0.5;
-}
-
-.obsidian-style .knowledge-graph-lines line.active {
-  stroke-opacity: 1;
-  stroke-width: 2;
-}
-
-.obsidian-style .node-circle {
-  border: 1.5px solid white;
-  box-shadow: var(--shadow-sm);
-}
-
-.obsidian-style .graph-node-dot.dimmed {
-  opacity: 0.15;
 }
 
 @media (max-width: 768px) {
@@ -1054,118 +1015,6 @@ code {
   background: #f1f5f9;
   color: var(--text);
   border-color: var(--accent);
-}
-
-.knowledge-graph-lines line {
-  stroke: var(--border);
-  stroke-width: 1.5;
-  transition: all 0.3s ease;
-}
-
-.knowledge-graph-lines line.active {
-  stroke: var(--category-color, var(--accent));
-  stroke-opacity: 0.8;
-  stroke-width: 2.5;
-  filter: drop-shadow(0 0 4px var(--category-color, var(--accent)));
-}
-
-.node-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0.8;
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid transparent;
-}
-
-.graph-node-dot:hover .node-label {
-  opacity: 1;
-  color: var(--text);
-  border-color: var(--border);
-  background: white;
-  box-shadow: var(--shadow-sm);
-}
-
-.graph-node-dot:hover {
-  z-index: 20;
-  transform: translate(-50%, -50%) scale(1.2);
-}
-
-.graph-node-dot:hover .node-circle {
-  box-shadow: 0 0 20px var(--category-color);
-  border-color: white;
-  transform: scale(1.2);
-}
-
-.graph-node-dot:hover .node-label {
-  opacity: 1;
-  color: white;
-  font-size: 13px;
-}
-
-/* Specific highlight for active connections */
-.graph-node-dot.dimmed {
-  opacity: 0.3;
-  filter: grayscale(0.5);
-}
-
-.graph-node-dot.highlighted {
-  opacity: 1;
-  filter: none;
-}
-
-.graph-node-dot.highlighted .node-label {
-  opacity: 1;
-  color: white;
-}
-
-.graph-node-card .entry-card-header {
-  margin-bottom: 12px;
-}
-
-.graph-node-card .entry-card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-}
-
-.graph-node-card .badge {
-  padding: 3px 7px;
-  font-size: 10px;
-}
-
-.graph-node-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.graph-node-card h2 {
-  margin-bottom: 0;
-  font-size: 15px;
-  line-height: 1.35;
-  -webkit-line-clamp: 2;
-}
-
-.graph-node-card p {
-  font-size: 12px;
-  line-height: 1.5;
-  -webkit-line-clamp: 1;
-}
-
-.graph-node-card .entry-card-footer {
-  margin-top: 12px;
-  gap: 8px;
-}
-
-.graph-node-card .entry-link-arrow svg {
-  width: 16px;
-  height: 16px;
 }
 
 .entry-card:hover {
