@@ -10,7 +10,7 @@ export default async function HomePage() {
         <h1>Long-term content management for reusable AI building blocks.</h1>
         <p>
           This starter treats prompts, skills, and workflows as structured content assets.
-          Markdown owns the body. The CMS owns metadata and relationships.
+          Everything is stored as Markdown.
         </p>
       </section>
 
@@ -26,8 +26,7 @@ export default async function HomePage() {
       </section>
 
       <p className="footer-note">
-        Body: <code>content/.generated/index.json</code>. Metadata mode:{" "}
-        <code>{index.metadata_source}</code>
+        Generated index: <code>content/.generated/index.json</code>.
       </p>
     </>
   );

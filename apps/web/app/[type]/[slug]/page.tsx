@@ -79,7 +79,7 @@ export default async function EntryDetailPage({
         <>
           <section className="list-header">
             <h1>Related entries</h1>
-            <p>Loaded from Directus relations when available, otherwise inferred from workflow body.</p>
+            <p>Automatically detected from mentions in the content body.</p>
           </section>
           <section className="card-grid">
             {related.map((item) => (

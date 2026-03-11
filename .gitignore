@@ -50,12 +50,6 @@ yarn-error.log*
 *.sw?
 
 # Project specific
-apps/cms/.directus
-data/directus.db
-data/*.db
-data/*.db-shm
-data/*.db-wal
-data/*.sqlite
 content/.generated
 
 # Build tools cache

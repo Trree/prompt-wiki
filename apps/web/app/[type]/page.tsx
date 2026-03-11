@@ -25,8 +25,7 @@ export default async function TypeListingPage({
       <section className="list-header">
         <h1>{result.label}</h1>
         <p>
-          {result.entries.length} entries available. Metadata mode:{" "}
-          <code>{result.metadataSource}</code>
+          {result.entries.length} entries available.
         </p>
       </section>
 

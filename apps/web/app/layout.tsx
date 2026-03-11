@@ -21,7 +21,7 @@ export default function RootLayout({
               <span className="brand-kicker">Prompt System</span>
               <strong className="brand-title">Prompt. Skill. Workflow.</strong>
               <span className="brand-subtitle">
-                Markdown content first. Directus metadata next. Minimal by design.
+                Markdown-driven knowledge base. Version-controlled.
               </span>
             </div>
             <nav className="nav">

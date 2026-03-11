@@ -1,57 +1,27 @@
 # Web App
 
-这个目录现在已经包含一个最小 Next.js 骨架。
+基于 Next.js 的 Prompt / Skill / Workflow 展示前端。
 
-当前实现：
+## 当前实现
 
-- 首页
-- `/prompts`
-- `/skills`
-- `/workflows`
-- `/[type]/[slug]`
+- 首页：概览
+- 列表页：`/prompts`, `/skills`, `/workflows`
+- 详情页：`/[type]/[slug]`
 
-当前数据源：
+## 数据源
 
-- 正文：`content/.generated/index.json`
-- 元数据：Directus API，如果不可用则回退本地索引
-
-也就是：
-
-- 正文来自 Markdown
-- 标签、状态、owner、relations 优先读 Directus
-- Directus 不可用时页面仍可降级运行
+- 完全基于本地文件系统生成的 `content/.generated/index.json`。
 
 ## 启动前提
 
-先在仓库根目录生成内容索引：
+1. 在仓库根目录生成内容索引：
+   ```bash
+   npm run content:index
+   ```
 
-```bash
-npm run content:index
-```
-
-再安装前端依赖并启动：
-
-```bash
-cd apps/web
-npm install
-npm run dev
-```
-
-如果要启用 Directus 元数据，先配置：
-
-```bash
-cp .env.example .env.local
-```
-
-然后填入：
-
-- `DIRECTUS_URL`
-- `DIRECTUS_TOKEN`
-
-## 后续接入 Directus
-
-当前版本已经是双源模式：
-
-1. 正文固定来自 Markdown
-2. 元数据优先来自 Directus
-3. 关系优先来自 `entry_relations`
+2. 安装依赖并启动：
+   ```bash
+   cd apps/web
+   npm install
+   npm run dev
+   ```
