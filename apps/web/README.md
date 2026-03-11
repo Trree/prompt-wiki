@@ -25,3 +25,8 @@
    npm install
    npm run dev
    ```
+
+## Owner Token
+
+- 设置 `OWNER_TOKEN` 环境变量后，除 `/public` 外的页面和内部 API 都需要先在 `/auth` 登录。
+- `/public` 下的页面始终可公开访问。

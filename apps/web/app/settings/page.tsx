@@ -1,10 +1,29 @@
 "use client";
 
+import type { Route } from "next";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Folder, ChevronLeft, X } from "lucide-react";
+import Link from "next/link";
+import { Plus, Trash2, Folder, ChevronLeft, X, Globe, Lock } from "lucide-react";
 
 interface Config {
   index_directories: string[];
+  public_directories: string[];
+  entry_visibility_overrides: Record<string, "public" | "private">;
+}
+
+interface ContentListItem {
+  id: string;
+  type: "prompt" | "skill" | "workflow";
+  routeType: "prompts" | "skills" | "workflows";
+  title: string;
+  slug: string;
+  summary: string;
+  source_path: string;
+  status: string;
+  directory_key: string;
+  directory_label: string;
+  visibility: "public" | "private";
+  visibility_mode: "directory" | "override";
 }
 
 interface FSResponse {
@@ -16,13 +35,14 @@ interface FSResponse {
 
 export default function SettingsPage() {
   const [config, setConfig] = useState<Config | null>(null);
+  const [entries, setEntries] = useState<ContentListItem[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [fsData, setFsData] = useState<FSResponse | null>(null);
   const [currentBrowsePath, setCurrentBrowsePath] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchConfig();
+    void Promise.all([fetchConfig(), fetchEntries()]).finally(() => setLoading(false));
   }, []);
 
   const fetchConfig = async () => {
@@ -32,8 +52,16 @@ export default function SettingsPage() {
       setConfig(data);
     } catch (e) {
       console.error("Failed to fetch config", e);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchEntries = async () => {
+    try {
+      const res = await fetch("/api/content");
+      const data = await res.json();
+      setEntries(data.entries ?? []);
+    } catch (e) {
+      console.error("Failed to fetch content list", e);
     }
   };
 
@@ -69,6 +97,47 @@ export default function SettingsPage() {
     saveConfig(newConfig);
   };
 
+  const togglePublicDirectory = (directoryKey: string) => {
+    if (!config) return;
+
+    const isPublic = config.public_directories.includes(directoryKey);
+    const nextPublicDirectories = isPublic
+      ? config.public_directories.filter((item) => item !== directoryKey)
+      : [...config.public_directories, directoryKey];
+
+    void saveConfig({
+      ...config,
+      public_directories: nextPublicDirectories,
+    });
+  };
+
+  const setEntryOverride = (entry: ContentListItem) => {
+    if (!config) return;
+
+    const directoryIsPublic = config.public_directories.includes(entry.directory_key);
+    const nextOverride = directoryIsPublic ? "private" : "public";
+
+    void saveConfig({
+      ...config,
+      entry_visibility_overrides: {
+        ...config.entry_visibility_overrides,
+        [entry.id]: nextOverride,
+      },
+    });
+  };
+
+  const clearEntryOverride = (entryId: string) => {
+    if (!config) return;
+
+    const nextOverrides = { ...config.entry_visibility_overrides };
+    delete nextOverrides[entryId];
+
+    void saveConfig({
+      ...config,
+      entry_visibility_overrides: nextOverrides,
+    });
+  };
+
   const browseFS = async (path?: string) => {
     const url = path ? `/api/fs?path=${encodeURIComponent(path)}` : "/api/fs";
     const res = await fetch(url);
@@ -81,6 +150,24 @@ export default function SettingsPage() {
     setCurrentBrowsePath(data.currentPath);
     setShowPicker(true);
   };
+
+  const groupedEntries = entries.reduce<Array<{ directoryKey: string; directoryLabel: string; items: ContentListItem[] }>>(
+    (groups, entry) => {
+      const existingGroup = groups.find((group) => group.directoryKey === entry.directory_key);
+      if (existingGroup) {
+        existingGroup.items.push(entry);
+        return groups;
+      }
+
+      groups.push({
+        directoryKey: entry.directory_key,
+        directoryLabel: entry.directory_label,
+        items: [entry],
+      });
+      return groups;
+    },
+    []
+  );
 
   if (loading) return <div className="shell">Loading...</div>;
 
@@ -133,6 +220,111 @@ export default function SettingsPage() {
           <Plus size={16} />
           Add Directory
         </button>
+      </section>
+
+      <section className="panel" style={{ marginTop: "24px" }}>
+        <h2 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "8px" }}>External Sharing</h2>
+        <p style={{ color: "var(--muted)", marginBottom: "24px", fontSize: "15px" }}>
+          Visibility now follows directories first. Mark a directory public to publish everything inside it, then use entry overrides only for exceptions.
+        </p>
+
+        <div className="sharing-summary">
+          <div className="meta-card">
+            <strong>Public directories</strong>
+            <span>{config?.public_directories.length ?? 0}</span>
+          </div>
+          <div className="meta-card">
+            <strong>Entry overrides</strong>
+            <span>{Object.keys(config?.entry_visibility_overrides ?? {}).length}</span>
+          </div>
+          <div className="meta-card">
+            <strong>Public home</strong>
+            <Link href="/public" className="inline-link">/public</Link>
+          </div>
+        </div>
+
+        <div className="sharing-list">
+          {groupedEntries.map((group) => {
+            const directoryIsPublic = config?.public_directories.includes(group.directoryKey) ?? false;
+
+            return (
+              <section key={group.directoryKey} className="share-directory">
+                <div className="share-directory-header">
+                  <div>
+                    <span className="directory-kicker">Index directory</span>
+                    <strong className="share-item-title">{group.directoryLabel}</strong>
+                    <p className="share-item-summary">
+                      {group.items.length} entries. Directory default is {directoryIsPublic ? "public" : "private"}.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => togglePublicDirectory(group.directoryKey)}
+                    className={directoryIsPublic ? "btn-private" : "btn-public"}
+                    type="button"
+                  >
+                    {directoryIsPublic ? <Lock size={14} /> : <Globe size={14} />}
+                    {directoryIsPublic ? "Set Directory Private" : "Set Directory Public"}
+                  </button>
+                </div>
+
+                <div className="share-directory-items">
+                  {group.items.map((entry) => {
+                    const override = config?.entry_visibility_overrides[entry.id];
+                    const effectiveVisibility = override ?? (directoryIsPublic ? "public" : "private");
+                    const publicHref = `/public/${entry.routeType}/${entry.slug}`;
+
+                    return (
+                      <div key={entry.id} className="share-item">
+                        <div className="share-item-main">
+                          <div className="badge-row">
+                            <span className="badge">{entry.type}</span>
+                            <span className="badge">{entry.status}</span>
+                            <span className="badge">{effectiveVisibility}</span>
+                            <span className="badge">{override ? "override" : "directory default"}</span>
+                          </div>
+                          <div>
+                            <strong className="share-item-title">{entry.title}</strong>
+                            <p className="share-item-summary">{entry.summary}</p>
+                            <code className="share-item-path">{entry.source_path}</code>
+                          </div>
+                        </div>
+
+                        <div className="share-item-actions">
+                          {effectiveVisibility === "public" ? (
+                            <Link href={publicHref as Route} className="btn-ghost">
+                              View public page
+                            </Link>
+                          ) : null}
+                          {override ? (
+                            <button
+                              onClick={() => clearEntryOverride(entry.id)}
+                              className="btn-ghost"
+                              type="button"
+                            >
+                              Use Directory Default
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setEntryOverride(entry)}
+                              className={directoryIsPublic ? "btn-private" : "btn-public"}
+                              type="button"
+                            >
+                              {directoryIsPublic ? <Lock size={14} /> : <Globe size={14} />}
+                              {directoryIsPublic ? "Hide This Entry" : "Publish This Entry"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+          {groupedEntries.length === 0 ? (
+            <div className="empty-state">No indexed entries available yet.</div>
+          ) : null}
+        </div>
       </section>
 
       {showPicker && fsData && (
@@ -210,7 +402,7 @@ export default function SettingsPage() {
       )}
 
       <footer className="footer-note" style={{ marginTop: '32px', textAlign: 'center' }}>
-        <p>After changing directories, run <code>npm run content:index</code> to update the index.</p>
+        <p>After changing directories or sharing settings, run <code>npm run content:index</code> if you need to rebuild the index manually.</p>
       </footer>
     </main>
   );

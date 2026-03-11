@@ -7,20 +7,40 @@ import { promisify } from "node:util";
 const execAsync = promisify(exec);
 const configPath = path.resolve(process.cwd(), "..", "..", "config.json");
 const scriptPath = path.resolve(process.cwd(), "..", "..", "scripts", "build-content-index.mjs");
+const defaultConfig = {
+  index_directories: [],
+  public_directories: [],
+  entry_visibility_overrides: {}
+};
 
 export async function GET() {
   try {
     const raw = await fs.readFile(configPath, "utf8");
-    return NextResponse.json(JSON.parse(raw));
+    const parsed = JSON.parse(raw);
+    return NextResponse.json({
+      ...defaultConfig,
+      ...parsed
+    });
   } catch (err) {
-    return NextResponse.json({ index_directories: [] });
+    return NextResponse.json(defaultConfig);
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    await fs.writeFile(configPath, JSON.stringify(body, null, 2), "utf8");
+    const nextConfig = {
+      ...defaultConfig,
+      ...body,
+      index_directories: Array.isArray(body.index_directories) ? body.index_directories : [],
+      public_directories: Array.isArray(body.public_directories) ? body.public_directories : [],
+      entry_visibility_overrides:
+        body.entry_visibility_overrides && typeof body.entry_visibility_overrides === "object"
+          ? body.entry_visibility_overrides
+          : {}
+    };
+
+    await fs.writeFile(configPath, JSON.stringify(nextConfig, null, 2), "utf8");
     
     // Automatically refresh index
     try {

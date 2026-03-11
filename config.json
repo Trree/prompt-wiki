@@ -1,5 +1,9 @@
 {
   "index_directories": [
     "/root/.claude/skills"
-  ]
+  ],
+  "public_directories": [
+    "/root/workspace/codex/prompt/content"
+  ],
+  "entry_visibility_overrides": {}
 }
