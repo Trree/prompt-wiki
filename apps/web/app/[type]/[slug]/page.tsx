@@ -21,7 +21,7 @@ export default async function EntryDetailPage({
     notFound();
   }
 
-  const related = entry.type === "workflow" ? await getRelatedEntriesForEntry(entry) : [];
+  const related = entry.type === "prompt" ? [] : await getRelatedEntriesForEntry(entry);
 
   return (
     <article className="detail-shell">
@@ -53,6 +53,18 @@ export default async function EntryDetailPage({
           <strong>Slug</strong>
           <span>{entry.slug}</span>
         </div>
+        {entry.type === "agent" ? (
+          <div className="meta-card">
+            <strong>Allowed tools</strong>
+            <span>{entry.allowed_tools?.join(", ") || "None"}</span>
+          </div>
+        ) : null}
+        {entry.type === "agent" ? (
+          <div className="meta-card">
+            <strong>Loaded skills</strong>
+            <span>{entry.skills?.join(", ") || "None"}</span>
+          </div>
+        ) : null}
       </section>
 
       <div className="markdown">

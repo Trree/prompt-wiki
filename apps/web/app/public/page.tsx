@@ -22,7 +22,7 @@ export default async function PublicHomePage() {
     <>
       <section className="hero">
         <h1>Public Library</h1>
-        <p>Only entries explicitly marked as public are visible here.</p>
+        <p>Entries in the built-in content library are public by default. Directory and entry overrides still apply.</p>
       </section>
 
       <section className="list-header">
@@ -31,7 +31,7 @@ export default async function PublicHomePage() {
       </section>
 
       {visibleSections.length === 0 ? (
-        <section className="panel empty-state">No public entries yet.</section>
+        <section className="panel empty-state">No public entries are currently visible.</section>
       ) : (
         <div className="directory-groups">
           {visibleSections.map((section) => (

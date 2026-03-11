@@ -13,8 +13,8 @@ interface Config {
 
 interface ContentListItem {
   id: string;
-  type: "prompt" | "skill" | "workflow";
-  routeType: "prompts" | "skills" | "workflows";
+  type: "prompt" | "skill" | "agent";
+  routeType: "prompts" | "skills" | "agents";
   title: string;
   slug: string;
   summary: string;
@@ -175,13 +175,13 @@ export default function SettingsPage() {
     <main className="shell">
       <header className="hero">
         <h1>Settings</h1>
-        <p>Configure additional indexing sources for your prompt library.</p>
+        <p>Configure additional indexing sources for your AI asset library.</p>
       </header>
 
       <section className="panel" style={{ marginTop: '24px' }}>
         <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Index Directories</h2>
         <p style={{ color: 'var(--muted)', marginBottom: '24px', fontSize: '15px' }}>
-          Add extra directories to scan for Prompts, Skills, and Workflows.
+          Add extra directories to scan for Prompts, Agents, and Skills.
         </p>
 
         <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
@@ -225,7 +225,7 @@ export default function SettingsPage() {
       <section className="panel" style={{ marginTop: "24px" }}>
         <h2 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "8px" }}>External Sharing</h2>
         <p style={{ color: "var(--muted)", marginBottom: "24px", fontSize: "15px" }}>
-          Visibility now follows directories first. Mark a directory public to publish everything inside it, then use entry overrides only for exceptions.
+          Visibility follows directories first. The built-in <code>content</code> directory is public by default, and you can still use directory or entry overrides for exceptions.
         </p>
 
         <div className="sharing-summary">

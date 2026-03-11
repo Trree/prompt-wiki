@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Nexus Library",
-  description: "Prompt, skill, workflow management system."
+  description: "Prompt, agent, skill management system."
 };
 
 export default function RootLayout({
@@ -18,10 +18,10 @@ export default function RootLayout({
         <div className="shell">
           <header className="topbar">
             <div className="brand">
-              <span className="brand-kicker">Prompt Library</span>
+              <span className="brand-kicker">Agent Library</span>
               <strong className="brand-title">Nexus</strong>
               <span className="brand-subtitle">
-                Systematic management for prompts, skills, and workflows.
+                Systematic management for prompts, agents, and skills.
               </span>
             </div>
             <NavLinks />
@@ -32,4 +32,3 @@ export default function RootLayout({
     </html>
   );
 }
-

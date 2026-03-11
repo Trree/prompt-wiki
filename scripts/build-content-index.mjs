@@ -21,6 +21,12 @@ if (fs.existsSync(configPath)) {
 
 const REQUIRED_FIELDS = ["id", "type", "title", "slug", "status", "summary"];
 
+function inferTypeFromPath(filePath) {
+  if (filePath.includes("/skills/")) return "skill";
+  if (filePath.includes("/agents/")) return "agent";
+  return "prompt";
+}
+
 function resolveEntryKind(fullPath, entry) {
   if (entry.isDirectory()) return "directory";
   if (entry.isFile()) return "file";
@@ -132,7 +138,7 @@ function buildEntry(filePath) {
   const mappedData = {
     ...data,
     id: id,
-    type: data.type || (filePath.includes("/skills/") ? "skill" : "prompt"),
+    type: data.type || inferTypeFromPath(filePath),
     title: data.title || data.name || id,
     slug: data.slug || id,
     status: data.status || "active",
@@ -161,8 +167,8 @@ function validateEntry(entry) {
     }
   }
 
-  if (!["prompt", "skill", "workflow"].includes(entry.type)) {
-    errors.push(`type must be one of: prompt, skill, workflow (got: ${entry.type})`);
+  if (!["prompt", "skill", "agent"].includes(entry.type)) {
+    errors.push(`type must be one of: prompt, skill, agent (got: ${entry.type})`);
   }
 
   return errors;

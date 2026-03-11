@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-export type EntryType = "prompt" | "skill" | "workflow";
-export type RouteType = "prompts" | "skills" | "workflows";
+export type EntryType = "prompt" | "agent" | "skill";
+export type RouteType = "prompts" | "agents" | "skills";
 
 export type ContentEntry = {
   id: string;
@@ -18,6 +18,12 @@ export type ContentEntry = {
   body: string;
   body_excerpt?: string;
   relation_types?: string[];
+  skills?: string[];
+  prompts?: string[];
+  allowed_tools?: string[];
+  context?: string;
+  scope?: string[];
+  handoff_contract?: string;
 };
 
 export type ContentIndex = {
@@ -48,8 +54,8 @@ export const routeGroups: Array<{
   label: string;
 }> = [
   { routeType: "prompts", entryType: "prompt", label: "Prompts" },
-  { routeType: "skills", entryType: "skill", label: "Skills" },
-  { routeType: "workflows", entryType: "workflow", label: "Workflows" }
+  { routeType: "agents", entryType: "agent", label: "Agents" },
+  { routeType: "skills", entryType: "skill", label: "Skills" }
 ];
 
 function resolveIndexPath() {
@@ -66,6 +72,14 @@ function resolveRepoRoot() {
 
 function resolveBuiltInDirectory() {
   return path.resolve(resolveRepoRoot(), "content");
+}
+
+function normalizeDirectoryPath(directory: string) {
+  return path.resolve(directory);
+}
+
+function getDefaultPublicDirectories() {
+  return [resolveBuiltInDirectory()];
 }
 
 function toEntryType(routeType: string): EntryType | null {
@@ -111,16 +125,20 @@ export async function getAppConfig(): Promise<AppConfig> {
       }
     }
 
+    const publicDirectories = Array.isArray(parsed.public_directories)
+      ? Array.from(new Set(parsed.public_directories.map(normalizeDirectoryPath)))
+      : getDefaultPublicDirectories();
+
     return {
       index_directories: parsed.index_directories ?? [],
-      public_directories: parsed.public_directories ?? [],
+      public_directories: publicDirectories,
       entry_visibility_overrides: entryVisibilityOverrides
     };
   } catch (err) {
     console.error(`Failed to read config at ${filePath}:`, err);
     return {
       index_directories: [],
-      public_directories: [],
+      public_directories: getDefaultPublicDirectories(),
       entry_visibility_overrides: {}
     };
   }
@@ -257,13 +275,25 @@ export async function getEntryByRouteTypeAndSlug(
 }
 
 function inferRelationsFromBody(entries: ContentEntry[], entry: ContentEntry): RelatedEntry[] {
-  if (!entry.body) {
-    return [];
+  const referenceIds = new Set<string>();
+
+  for (const candidateId of [
+    ...(entry.skills ?? []),
+    ...(entry.prompts ?? [])
+  ]) {
+    referenceIds.add(candidateId);
   }
 
-  // Simple heuristic: find other entry IDs mentioned in the body
+  if (entry.body) {
+    for (const candidate of entries) {
+      if (candidate.id !== entry.id && entry.body.includes(candidate.id)) {
+        referenceIds.add(candidate.id);
+      }
+    }
+  }
+
   return entries
-    .filter((candidate) => candidate.id !== entry.id && entry.body.includes(candidate.id))
+    .filter((candidate) => candidate.id !== entry.id && referenceIds.has(candidate.id))
     .map((candidate) => ({
       ...candidate,
       relation_type: "uses"

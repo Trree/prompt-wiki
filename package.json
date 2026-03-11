@@ -1,5 +1,5 @@
 {
-  "name": "prompt-skill-workflow-system",
+  "name": "prompt-skill-agent-system",
   "private": true,
   "workspaces": [
     "apps/*"

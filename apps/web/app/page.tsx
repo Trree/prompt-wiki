@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { BookOpen, Zap, Workflow, ChevronRight } from "lucide-react";
+import { BookOpen, Zap, Bot, ChevronRight } from "lucide-react";
 import { getContentIndex, routeGroups } from "../lib/content";
 
 const ICON_MAP = {
   prompts: BookOpen,
   skills: Zap,
-  workflows: Workflow,
+  agents: Bot,
 };
 
 export default async function HomePage() {
@@ -18,7 +18,7 @@ export default async function HomePage() {
       <section className="hero">
         <h1>High-performance content management for AI assets.</h1>
         <p>
-          Nexus treats prompts, skills, and workflows as structured, version-controlled building blocks.
+          Nexus treats prompts, agents, and skills as structured, version-controlled building blocks.
           Build your AI knowledge base with Markdown and Git.
         </p>
       </section>

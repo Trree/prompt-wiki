@@ -1,4 +1,4 @@
-# Prompt / Skill / Workflow System
+# Prompt / Agent / Skill System
 
 最小 starter 骨架，遵循当前 PRD：
 
@@ -13,8 +13,8 @@ apps/
   web/
 content/
   prompts/
+  agents/
   skills/
-  workflows/
 scripts/
 ```
 

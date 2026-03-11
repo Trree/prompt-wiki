@@ -7,13 +7,13 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Home, BookOpen, Zap, Workflow, Settings, Globe, LogOut } from "lucide-react";
+import { Home, BookOpen, Zap, Bot, Settings, Globe, LogOut } from "lucide-react";
 
 const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: "/", label: "Home", icon: Home },
   { href: "/prompts", label: "Prompts", icon: BookOpen },
+  { href: "/agents", label: "Agents", icon: Bot },
   { href: "/skills", label: "Skills", icon: Zap },
-  { href: "/workflows", label: "Workflows", icon: Workflow },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

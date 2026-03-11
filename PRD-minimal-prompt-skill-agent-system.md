@@ -1,12 +1,12 @@
-# PRD: Prompt / Skill / Workflow 管理系统（最简实现）
+# PRD: Prompt / Agent / Skill 管理系统（最简实现）
 
 ## 1. 项目目标
 
 基于 `Next.js + Markdown` 构建一个轻量级、版本化的管理系统，用来统一管理：
 
 - Prompt
+- Agent
 - Skill
-- Workflow
 
 系统核心设计理念：**内容即代码 (Content as Code)**。通过 Markdown 存储正文，通过自动生成的索引文件管理元数据。
 
@@ -14,7 +14,7 @@
 
 ## 2. 背景与问题
 
-当前 Prompt / Skill / Workflow 往往分散在不同的地方，导致难以检索、版本混乱、关系不明。本项目通过标准化的目录结构和元数据规范，解决内容的结构化存储、版本化维护和清晰展示问题。
+当前 Prompt / Agent / Skill 往往分散在不同的地方，导致难以检索、版本混乱、关系不明。本项目通过标准化的目录结构和元数据规范，解决内容的结构化存储、版本化维护和清晰展示问题。
 
 ---
 
@@ -38,8 +38,8 @@
 系统管理 3 类核心对象：
 
 1. **Prompt**：提示词指令及其配置。
-2. **Skill**：特定的能力描述、输入输出要求及示例。
-3. **Workflow**：由多个步骤或 Prompt/Skill 组合成的工作流。
+2. **Agent**：带独立上下文和受限工具权限的专项执行者，由主会话调度并装载若干 Skills。
+3. **Skill**：特定的能力描述、输入输出要求、内置知识及其内部步骤。
 
 ---
 
@@ -58,8 +58,8 @@
 ```txt
 /content
   /prompts    # 存储 Prompt
+  /agents     # 存储 Agent
   /skills     # 存储 Skill
-  /workflows  # 存储 Workflow
   /.generated # 存储自动生成的索引文件
 /apps/web     # Next.js 前端应用
 /scripts      # 内容处理脚本
@@ -73,7 +73,7 @@
 
 ```yaml
 id: summarize-article    # 唯一标识符
-type: prompt             # 类型：prompt | skill | workflow
+type: prompt             # 类型：prompt | skill | agent
 title: 文章摘要助手        # 标题
 slug: summarize-article  # URL 路径
 status: active           # 状态：active | draft | archived
@@ -98,14 +98,14 @@ summary: 用于将长文压缩为结构化摘要 # 简短摘要
 
 ### 7.2 关系管理 (简易模式)
 
-通过在 Markdown 正文中引用其他条目的 `id`，系统会自动识别并建立关联（如：“本工作流使用了 [summarize-article]”）。
+通过在 Markdown 正文中引用其他条目的 `id`，系统会自动识别并建立关联（如：“本 agent 使用了 [summarize-article]”）。
 
 ---
 
 ## 8. 页面规划
 
 1. **首页**：展示系统概览及快捷入口。
-2. **列表页**：按类型（Prompt/Skill/Workflow）展示内容列表，支持标签筛选和搜索。
+2. **列表页**：按类型（Prompt/Agent/Skill）展示内容列表，支持标签筛选和搜索。
 3. **详情页**：展示完整的元数据、Markdown 渲染的正文、以及自动识别的关联内容。
 
 ---
@@ -121,4 +121,4 @@ summary: 用于将长文压缩为结构化摘要 # 简短摘要
 
 ## 10. 一句话定义
 
-这是一个**纯静态、Git 驱动、零数据库负担**的 Prompt / Skill / Workflow 知识库管理系统。
+这是一个**纯静态、Git 驱动、零数据库负担**的 Prompt / Agent / Skill 知识库管理系统。

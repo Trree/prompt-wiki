@@ -1,11 +1,11 @@
 # Web App
 
-基于 Next.js 的 Prompt / Skill / Workflow 展示前端。
+基于 Next.js 的 Prompt / Agent / Skill 展示前端。
 
 ## 当前实现
 
 - 首页：概览
-- 列表页：`/prompts`, `/skills`, `/workflows`
+- 列表页：`/prompts`, `/agents`, `/skills`
 - 详情页：`/[type]/[slug]`
 
 ## 数据源
