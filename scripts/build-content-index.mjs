@@ -1,38 +1,36 @@
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
-const cwd = process.cwd();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const cwd = path.resolve(__dirname, "..");
 const contentRoot = path.join(cwd, "content");
-const claudeSkillsRoot = "/root/.claude/skills";
+const configPath = path.join(cwd, "config.json");
 const outputDir = path.join(contentRoot, ".generated");
 const outputFile = path.join(outputDir, "index.json");
 const checkOnly = process.argv.includes("--check");
 
+let config = { index_directories: [] };
+if (fs.existsSync(configPath)) {
+  try {
+    config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  } catch (err) {
+    console.warn(`Warning: Could not read config file at ${configPath}: ${err.message}`);
+  }
+}
+
 const REQUIRED_FIELDS = ["id", "type", "title", "slug", "status", "summary"];
 
-function walk(dir, mode = "standard") {
-  if (!fs.existsSync(dir) && !dir.startsWith("/root/")) return [];
+function walk(dir) {
+  if (!fs.existsSync(dir)) return [];
 
-  // Mode 1: Claude Skills mode (looking for */SKILL.md)
-  if (mode === "claude-skills") {
-    try {
-      // Use shell to find files to bypass potential permission/fs issues in system dirs
-      const output = execSync(`ls -d ${dir}/*/SKILL.md 2>/dev/null`, { encoding: "utf8" });
-      return output.trim().split("\n").filter(Boolean);
-    } catch {
-      return [];
-    }
-  }
-
-  // Mode 2: Standard recursive .md search
   let files = [];
   try {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        files.push(...walk(fullPath, "standard"));
+        files.push(...walk(fullPath));
       } else if (entry.isFile() && entry.name.endsWith(".md") && entry.name !== "index.json") {
         files.push(fullPath);
       }
@@ -92,11 +90,8 @@ function parseFrontmatter(raw) {
 function buildEntry(filePath) {
   const raw = fs.readFileSync(filePath, "utf8");
   const { data, body } = parseFrontmatter(raw);
-  const relativePath = filePath.startsWith("/root/.claude") 
-    ? filePath 
-    : path.relative(cwd, filePath).replaceAll(path.sep, "/");
+  const relativePath = path.relative(cwd, filePath).replaceAll(path.sep, "/");
 
-  // Map Claude Code SKILL.md fields to internal fields
   const id = data.id || data.name || path.basename(path.dirname(filePath));
   const mappedData = {
     ...data,
@@ -143,8 +138,8 @@ if (!fs.existsSync(contentRoot)) {
 }
 
 const markdownFiles = [
-  ...walk(contentRoot, "standard"),
-  ...walk(claudeSkillsRoot, "claude-skills")
+  ...walk(contentRoot),
+  ...(config.index_directories || []).flatMap(dir => walk(path.resolve(cwd, dir)))
 ];
 const entries = markdownFiles.map(buildEntry);
 const validationErrors = [];
