@@ -1,12 +1,27 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { BookOpen, Zap, Bot, ChevronRight } from "lucide-react";
+import { BookOpen, Zap, Bot, ArrowRight } from "lucide-react";
 import { getContentIndex, routeGroups } from "../lib/content";
 
-const ICON_MAP = {
-  prompts: BookOpen,
-  skills: Zap,
-  agents: Bot,
+const CATEGORY_META = {
+  prompts: {
+    icon: BookOpen,
+    color: "var(--prompt-color)",
+    bg: "var(--prompt-soft)",
+    desc: "Reusable prompt templates with version control and variable support."
+  },
+  skills: {
+    icon: Zap,
+    color: "var(--skill-color)",
+    bg: "var(--skill-soft)",
+    desc: "Actionable capabilities that extend agent functionality via tools."
+  },
+  agents: {
+    icon: Bot,
+    color: "var(--agent-color)",
+    bg: "var(--agent-soft)",
+    desc: "Autonomous personas configured with specific goals and toolsets."
+  },
 };
 
 export default async function HomePage() {
@@ -25,34 +40,31 @@ export default async function HomePage() {
 
       <section className="stats-grid">
         {routeGroups.map((group) => {
-          const Icon = ICON_MAP[group.routeType];
+          const meta = CATEGORY_META[group.routeType];
+          const Icon = meta.icon;
           const count = index.entries.filter((entry) => entry.type === group.entryType).length;
           
           return (
-            <Link className="panel group" key={group.routeType} href={`/${group.routeType}`} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ 
-                  padding: '12px', 
-                  borderRadius: '12px', 
-                  background: 'var(--accent-soft)', 
-                  color: 'var(--accent)' 
-                }}>
-                  <Icon size={24} />
+            <Link className="panel" key={group.routeType} href={`/${group.routeType}`}>
+              <div className="panel-icon-box">
+                <div className="panel-icon-wrapper" style={{ background: meta.bg, color: meta.color }}>
+                  <Icon size={32} />
                 </div>
-                <ChevronRight size={16} style={{ color: 'var(--border)' }} />
+                <ArrowRight size={20} style={{ color: "var(--border)" }} />
               </div>
               <div>
                 <span className="panel-label">{group.label}</span>
                 <strong className="panel-value">{count}</strong>
               </div>
+              <p className="panel-desc">{meta.desc}</p>
             </Link>
           );
         })}
       </section>
 
-      <p className="footer-note">
-        Registry: <code>content/.generated/index.json</code>. Ready for deployment.
-      </p>
+      <div className="footer-note">
+        Registry: <code>content/.generated/index.json</code>. Ready for production deployment.
+      </div>
     </>
   );
 }
