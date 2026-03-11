@@ -12,6 +12,7 @@ import {
   isAuthorizedOwnerSession,
   isOwnerTokenConfigured
 } from "../lib/auth";
+import { HomeKnowledgeGraph } from "./HomeKnowledgeGraph";
 
 const CATEGORY_META = {
   prompts: {
@@ -87,6 +88,12 @@ async function OwnerHomePage() {
           );
         })}
       </div>
+
+      <HomeKnowledgeGraph
+        visibility="all"
+        title="Workspace connections across prompts, skills, and agents."
+        description="A compact graph view of the most connected building blocks in this workspace, based on explicit skill and prompt references."
+      />
 
       <div className="dashboard-grid">
         {entriesByType.map((group) => (
@@ -173,6 +180,12 @@ async function PublicHomePage({
           Everything here is open for public reference and integration.
         </p>
       </section>
+
+      <HomeKnowledgeGraph
+        visibility="public"
+        title="How the public knowledge building blocks connect."
+        description="A small homepage graph that surfaces the strongest links between prompts, skills, and agents while keeping the existing card UI intact."
+      />
 
       <section className="list-header">
         <h1>Published Entries</h1>

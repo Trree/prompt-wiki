@@ -48,6 +48,27 @@ export type DirectoryGroup = {
   items: ContentEntry[];
 };
 
+export type HomeKnowledgeGraphNode = ContentEntry & {
+  routeType: RouteType;
+  x: number;
+  y: number;
+  degree: number;
+};
+
+export type HomeKnowledgeGraphEdge = {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  relationType: string;
+};
+
+export type HomeKnowledgeGraph = {
+  nodes: HomeKnowledgeGraphNode[];
+  edges: HomeKnowledgeGraphEdge[];
+  totalNodes: number;
+  totalRelationships: number;
+};
+
 export const routeGroups: Array<{
   routeType: RouteType;
   entryType: EntryType;
@@ -56,6 +77,24 @@ export const routeGroups: Array<{
   { routeType: "prompts", entryType: "prompt", label: "Prompts" },
   { routeType: "agents", entryType: "agent", label: "Agents" },
   { routeType: "skills", entryType: "skill", label: "Skills" }
+];
+
+const HOME_GRAPH_LAYOUT = [
+  { x: 50, y: 50 },
+  { x: 18, y: 20 },
+  { x: 82, y: 20 },
+  { x: 12, y: 62 },
+  { x: 88, y: 62 },
+  { x: 32, y: 86 },
+  { x: 68, y: 86 }
+];
+
+const HOME_GRAPH_LAYOUT_COMPACT = [
+  { x: 50, y: 18 },
+  { x: 18, y: 42 },
+  { x: 82, y: 42 },
+  { x: 32, y: 76 },
+  { x: 68, y: 76 }
 ];
 
 function resolveIndexPath() {
@@ -275,22 +314,7 @@ export async function getEntryByRouteTypeAndSlug(
 }
 
 function inferRelationsFromBody(entries: ContentEntry[], entry: ContentEntry): RelatedEntry[] {
-  const referenceIds = new Set<string>();
-
-  for (const candidateId of [
-    ...(entry.skills ?? []),
-    ...(entry.prompts ?? [])
-  ]) {
-    referenceIds.add(candidateId);
-  }
-
-  if (entry.body) {
-    for (const candidate of entries) {
-      if (candidate.id !== entry.id && entry.body.includes(candidate.id)) {
-        referenceIds.add(candidate.id);
-      }
-    }
-  }
+  const referenceIds = inferReferenceIds(entries, entry);
 
   return entries
     .filter((candidate) => candidate.id !== entry.id && referenceIds.has(candidate.id))
@@ -303,6 +327,239 @@ function inferRelationsFromBody(entries: ContentEntry[], entry: ContentEntry): R
 export async function getRelatedEntriesForEntry(entry: ContentEntry): Promise<RelatedEntry[]> {
   const index = await getContentIndex();
   return inferRelationsFromBody(index.entries, entry);
+}
+
+function inferReferenceIds(entries: ContentEntry[], entry: ContentEntry) {
+  const referenceIds = new Set<string>();
+
+  for (const candidateId of [...(entry.skills ?? []), ...(entry.prompts ?? [])]) {
+    referenceIds.add(candidateId);
+  }
+
+  if (!entry.body) {
+    return referenceIds;
+  }
+
+  for (const candidate of entries) {
+    if (candidate.id !== entry.id && entry.body.includes(candidate.id)) {
+      referenceIds.add(candidate.id);
+    }
+  }
+
+  return referenceIds;
+}
+
+function buildEntryKnowledgeGraph(entries: ContentEntry[]) {
+  const nodeMap = new Map<string, ContentEntry>();
+  const relMap = new Map<string, HomeKnowledgeGraphEdge>();
+
+  for (const entry of entries) {
+    nodeMap.set(entry.id, entry);
+  }
+
+  // 1. Explicit ID-based relations (uses)
+  for (const entry of entries) {
+    const referenceIds = inferReferenceIds(entries, entry);
+
+    for (const targetId of referenceIds) {
+      if (!nodeMap.has(targetId) || targetId === entry.id) {
+        continue;
+      }
+
+      const pair = [entry.id, targetId].sort();
+      const relId = `${pair[0]}::${pair[1]}::uses`;
+
+      if (!relMap.has(relId)) {
+        relMap.set(relId, {
+          id: relId,
+          sourceId: pair[0],
+          targetId: pair[1],
+          relationType: "uses"
+        });
+      }
+    }
+  }
+
+  // 2. Tag-based implicit relations (related)
+  // This helps connect nodes that don't explicitly reference each other
+  const entriesByTag = new Map<string, string[]>();
+  for (const entry of entries) {
+    for (const tag of entry.tags ?? []) {
+      const list = entriesByTag.get(tag) ?? [];
+      list.push(entry.id);
+      entriesByTag.set(tag, list);
+    }
+  }
+
+  for (const [tag, ids] of entriesByTag.entries()) {
+    if (ids.length < 2) continue;
+    // Connect entries sharing the same tag
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const pair = [ids[i], ids[j]].sort();
+        const relId = `${pair[0]}::${pair[1]}::related`;
+        
+        if (!relMap.has(relId)) {
+          relMap.set(relId, {
+            id: relId,
+            sourceId: pair[0],
+            targetId: pair[1],
+            relationType: "related"
+          });
+        }
+      }
+    }
+  }
+
+  return {
+    nodes: Array.from(nodeMap.values()),
+    edges: Array.from(relMap.values())
+  };
+}
+
+function scoreEntryForGraph(entry: ContentEntry, degree: number) {
+  const statusScore = entry.status.toLowerCase() === "active" ? 2 : entry.status.toLowerCase() === "draft" ? 1 : 0;
+  const relationScore = (entry.skills?.length ?? 0) + (entry.prompts?.length ?? 0);
+  return degree * 10 + statusScore * 3 + relationScore;
+}
+
+function compareGraphEntries(
+  degreeById: Map<string, number>,
+  entryById: Map<string, ContentEntry>,
+  leftId: string,
+  rightId: string
+) {
+  const left = entryById.get(leftId);
+  const right = entryById.get(rightId);
+
+  if (!left || !right) {
+    return 0;
+  }
+
+  const scoreDiff =
+    scoreEntryForGraph(right, degreeById.get(rightId) ?? 0) -
+    scoreEntryForGraph(left, degreeById.get(leftId) ?? 0);
+
+  if (scoreDiff !== 0) {
+    return scoreDiff;
+  }
+
+  return left.title.localeCompare(right.title, "zh-Hans-CN");
+}
+
+function selectHomeGraphEntryIds(
+  entries: ContentEntry[],
+  edges: HomeKnowledgeGraphEdge[],
+  maxNodes: number
+) {
+  const entryById = new Map(entries.map((entry) => [entry.id, entry]));
+  const adjacency = new Map<string, Set<string>>();
+
+  for (const entry of entries) {
+    adjacency.set(entry.id, new Set());
+  }
+
+  for (const edge of edges) {
+    adjacency.get(edge.sourceId)?.add(edge.targetId);
+    adjacency.get(edge.targetId)?.add(edge.sourceId);
+  }
+
+  const degreeById = new Map(
+    entries.map((entry) => [entry.id, adjacency.get(entry.id)?.size ?? 0])
+  );
+
+  const rankedIds = entries
+    .map((entry) => entry.id)
+    .sort((leftId, rightId) => compareGraphEntries(degreeById, entryById, leftId, rightId));
+
+  const selectedIds = new Set<string>();
+
+  for (const entryId of rankedIds) {
+    if (selectedIds.size >= maxNodes) {
+      break;
+    }
+
+    if (selectedIds.has(entryId)) {
+      continue;
+    }
+
+    selectedIds.add(entryId);
+
+    const neighbors = Array.from(adjacency.get(entryId) ?? []).sort((leftId, rightId) =>
+      compareGraphEntries(degreeById, entryById, leftId, rightId)
+    );
+
+    for (const neighborId of neighbors) {
+      if (selectedIds.size >= maxNodes) {
+        break;
+      }
+
+      selectedIds.add(neighborId);
+    }
+  }
+
+  return Array.from(selectedIds).sort((leftId, rightId) =>
+    compareGraphEntries(degreeById, entryById, leftId, rightId)
+  );
+}
+
+export async function getHomeKnowledgeGraph(
+  options: { visibility?: "all" | "public" } = {}
+): Promise<HomeKnowledgeGraph> {
+  const visibility = options.visibility ?? "public";
+  const [index, config] = await Promise.all([getContentIndex(), getAppConfig()]);
+  const visibleEntries = filterEntriesByVisibility(index.entries, config, visibility);
+  const graph = buildEntryKnowledgeGraph(visibleEntries);
+
+  if (graph.nodes.length === 0) {
+    return {
+      nodes: [],
+      edges: [],
+      totalNodes: 0,
+      totalRelationships: 0
+    };
+  }
+
+  const nodes = graph.nodes;
+  const edges = graph.edges;
+
+  // Simple circle-based layout for all nodes to avoid overlap
+  const positionedNodes = nodes.map((entry, index) => {
+    // Distribute nodes in a golden ratio spiral for a natural look
+    const phi = index * Math.PI * (3 - Math.sqrt(5)); // golden angle
+    const radius = 40 * Math.sqrt(index / nodes.length);
+    const x = 50 + radius * Math.cos(phi);
+    const y = 50 + radius * Math.sin(phi);
+
+    return {
+      ...entry,
+      routeType: getRouteTypeForEntry(entry),
+      degree: 0, // Will calculate below
+      x,
+      y
+    };
+  });
+
+  const degreeById = new Map<string, number>();
+  for (const node of positionedNodes) {
+    degreeById.set(node.id, 0);
+  }
+
+  for (const edge of edges) {
+    degreeById.set(edge.sourceId, (degreeById.get(edge.sourceId) ?? 0) + 1);
+    degreeById.set(edge.targetId, (degreeById.get(edge.targetId) ?? 0) + 1);
+  }
+
+  positionedNodes.forEach(node => {
+    node.degree = degreeById.get(node.id) ?? 0;
+  });
+
+  return {
+    nodes: positionedNodes,
+    edges,
+    totalNodes: graph.nodes.length,
+    totalRelationships: graph.edges.length
+  };
 }
 
 export async function getEntriesForStaticParams(routeType: string) {
