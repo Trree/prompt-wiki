@@ -118,7 +118,7 @@ function SigmaCanvas({
       const totalN = visibleNodes.length;
       visibleNodes.forEach((node, i) => {
         const phi = i * Math.PI * (3 - Math.sqrt(5));
-        const r = 80 * Math.sqrt(i / Math.max(totalN, 1));
+        const r = 40 * Math.sqrt(i / Math.max(totalN, 1));
         const degree = degreeMap.get(node.id) ?? 0;
         const size = Math.min(20, 4 + degree * 2);
         graph.addNode(node.id, {
@@ -156,11 +156,11 @@ function SigmaCanvas({
       // Run ForceAtlas2 synchronously — fine for small graphs (< 500 nodes)
       if (graph.order > 1) {
         forceAtlas2.assign(graph, {
-          iterations: 200,
+          iterations: 400,
           settings: {
-            gravity: 2,
-            scalingRatio: 4,
-            slowDown: 2,
+            gravity: 8,
+            scalingRatio: 1.5,
+            slowDown: 5,
             barnesHutOptimize: graph.order > 100,
           },
         });
@@ -265,8 +265,34 @@ function SigmaCanvas({
         });
       }
 
-      // Click node → select/deselect + pan camera
+      // Drag nodes
+      let draggedNode: string | null = null;
+      let wasDragged = false;
+
+      sigma.on("downNode", ({ node }: { node: string }) => {
+        draggedNode = node;
+        wasDragged = false;
+      });
+
+      sigma.getMouseCaptor().on("mousemovebody", (e: any) => {
+        if (!draggedNode) return;
+        wasDragged = true;
+        onTooltip(null);
+        const pos = sigma.viewportToGraph(e);
+        graph.setNodeAttribute(draggedNode, "x", pos.x);
+        graph.setNodeAttribute(draggedNode, "y", pos.y);
+        e.preventSigmaDefault();
+        e.original.preventDefault();
+        e.original.stopPropagation();
+      });
+
+      const stopDrag = () => { draggedNode = null; };
+      sigma.getMouseCaptor().on("mouseup", stopDrag);
+      sigma.getMouseCaptor().on("mouseleave", () => { draggedNode = null; wasDragged = false; });
+
+      // Click node → select/deselect + pan camera (skip if drag occurred)
       sigma.on("clickNode", ({ node }: { node: string }) => {
+        if (wasDragged) { wasDragged = false; return; }
         const currentSelected = selectedRef.current;
         if (currentSelected === node) {
           onSelectNode(null);
