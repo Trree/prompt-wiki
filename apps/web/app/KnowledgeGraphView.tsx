@@ -118,7 +118,7 @@ function SigmaCanvas({
       const totalN = visibleNodes.length;
       visibleNodes.forEach((node, i) => {
         const phi = i * Math.PI * (3 - Math.sqrt(5));
-        const r = 200 * Math.sqrt(i / Math.max(totalN, 1));
+        const r = 80 * Math.sqrt(i / Math.max(totalN, 1));
         const degree = degreeMap.get(node.id) ?? 0;
         const size = Math.min(20, 4 + degree * 2);
         graph.addNode(node.id, {
@@ -158,8 +158,8 @@ function SigmaCanvas({
         forceAtlas2.assign(graph, {
           iterations: 200,
           settings: {
-            gravity: 1,
-            scalingRatio: 10,
+            gravity: 2,
+            scalingRatio: 4,
             slowDown: 2,
             barnesHutOptimize: graph.order > 100,
           },
