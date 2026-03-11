@@ -196,6 +196,58 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.directory-groups {
+  display: grid;
+  gap: 32px;
+}
+
+.directory-section + .directory-section {
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.directory-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.directory-kicker {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.directory-header h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.directory-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface);
+}
+
+.directory-card-grid {
+  gap: 20px;
+}
+
 .entry-card {
   display: flex;
   flex-direction: column;
@@ -464,4 +516,3 @@ a {
     padding: 20px;
   }
 }
-
