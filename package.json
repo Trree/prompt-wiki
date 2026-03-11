@@ -1,0 +1,13 @@
+{
+  "name": "prompt-skill-workflow-system",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "content:index": "node scripts/build-content-index.mjs",
+    "content:check": "node scripts/build-content-index.mjs --check",
+    "directus:sync": "node scripts/sync-content-to-directus.mjs --dry-run",
+    "directus:sync:apply": "node scripts/sync-content-to-directus.mjs"
+  }
+}
