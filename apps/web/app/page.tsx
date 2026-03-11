@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { BookOpen, Zap, Bot, ArrowRight } from "lucide-react";
+import { BookOpen, Zap, Bot, ArrowRight, Settings, ExternalLink, Clock } from "lucide-react";
 import {
   getContentIndex,
   getEntriesByRouteType,
@@ -12,26 +12,22 @@ import {
   isAuthorizedOwnerSession,
   isOwnerTokenConfigured
 } from "../lib/auth";
-import { OwnerTokenEntry } from "./OwnerTokenEntry";
 
 const CATEGORY_META = {
   prompts: {
     icon: BookOpen,
     color: "var(--prompt-color)",
     bg: "var(--prompt-soft)",
-    desc: "Reusable prompt templates with version control and variable support."
   },
   skills: {
     icon: Zap,
     color: "var(--skill-color)",
     bg: "var(--skill-soft)",
-    desc: "Actionable capabilities that extend agent functionality via tools."
   },
   agents: {
     icon: Bot,
     color: "var(--agent-color)",
     bg: "var(--agent-soft)",
-    desc: "Autonomous personas configured with specific goals and toolsets."
   },
 };
 
@@ -42,45 +38,106 @@ function isSafeNextPath(nextPath?: string) {
 async function OwnerHomePage() {
   noStore();
   const index = await getContentIndex();
+  
+  const entriesByType = routeGroups.map(group => ({
+    ...group,
+    entries: index.entries
+      .filter(e => e.type === group.entryType)
+      .slice(0, 5) // Show top 5 of each for the dashboard
+  }));
 
   return (
-    <>
-      <section className="hero">
-        <h1>High-performance content management for AI assets.</h1>
-        <p>
-          Nexus treats prompts, agents, and skills as structured, version-controlled building blocks.
-          Build your AI knowledge base with Markdown and Git.
-        </p>
-      </section>
+    <div className="dashboard">
+      <header className="dashboard-header">
+        <div>
+          <h1>Workspace Overview</h1>
+          <p className="dashboard-subtitle">
+            Nexus treats prompts, agents, and skills as version-controlled building blocks.
+          </p>
+        </div>
+        <div className="dashboard-actions">
+          <Link href="/settings" className="nav-link">
+            <Settings size={18} />
+            <span>Settings</span>
+          </Link>
+          <Link href="/public" className="nav-link">
+            <ExternalLink size={18} />
+            <span>Public View</span>
+          </Link>
+        </div>
+      </header>
 
-      <section className="stats-grid">
+      <div className="stats-row">
         {routeGroups.map((group) => {
           const meta = CATEGORY_META[group.routeType];
           const Icon = meta.icon;
           const count = index.entries.filter((entry) => entry.type === group.entryType).length;
           
           return (
-            <Link className="panel" key={group.routeType} href={`/${group.routeType}`}>
-              <div className="panel-icon-box">
-                <div className="panel-icon-wrapper" style={{ background: meta.bg, color: meta.color }}>
-                  <Icon size={32} />
-                </div>
-                <ArrowRight size={20} style={{ color: "var(--border)" }} />
+            <Link className="stat-card" key={group.routeType} href={`/${group.routeType}`}>
+              <div className="stat-icon" style={{ background: meta.bg, color: meta.color }}>
+                <Icon size={20} />
               </div>
-              <div>
-                <span className="panel-label">{group.label}</span>
-                <strong className="panel-value">{count}</strong>
+              <div className="stat-info">
+                <span className="stat-label">{group.label}</span>
+                <strong className="stat-value">{count}</strong>
               </div>
-              <p className="panel-desc">{meta.desc}</p>
+              <ArrowRight size={16} className="stat-arrow" />
             </Link>
           );
         })}
-      </section>
-
-      <div className="footer-note">
-        Registry: <code>content/.generated/index.json</code>. Ready for production deployment.
       </div>
-    </>
+
+      <div className="dashboard-grid">
+        {entriesByType.map((group) => (
+          <section key={group.routeType} className="dashboard-section">
+            <div className="section-header">
+              <div className="section-title">
+                <div 
+                  className="section-indicator" 
+                  style={{ background: CATEGORY_META[group.routeType].color }} 
+                />
+                <h2>{group.label}</h2>
+              </div>
+              <Link href={`/${group.routeType}`} className="view-all">
+                View All
+              </Link>
+            </div>
+            
+            <div className="entry-list-compact">
+              {group.entries.length === 0 ? (
+                <div className="empty-mini">No {group.label.toLowerCase()} found.</div>
+              ) : (
+                group.entries.map((entry) => (
+                  <Link 
+                    key={entry.id} 
+                    href={`/${group.routeType}/${entry.slug}`}
+                    className="entry-item-compact"
+                  >
+                    <div className="entry-item-main">
+                      <span className="entry-item-title">{entry.title}</span>
+                      <span className="entry-item-slug">{entry.id}</span>
+                    </div>
+                    <span className={`badge status-${entry.status.toLowerCase()}`}>
+                      {entry.status}
+                    </span>
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <footer className="dashboard-footer">
+        <div className="registry-info">
+          <Clock size={14} />
+          <span>Last indexed: {new Date(index.generated_at).toLocaleString()}</span>
+          <span className="divider">|</span>
+          <code>content/.generated/index.json</code>
+        </div>
+      </footer>
+    </div>
   );
 }
 
@@ -110,17 +167,16 @@ async function PublicHomePage({
     <>
       <section className="hero">
         <span className="hero-kicker">Public Library</span>
-        <h1>Open access first, owner access on demand.</h1>
+        <h1>Open access knowledge, version-controlled by experts.</h1>
         <p>
-          Public entries are visible directly on the home page. Enter <code>OWNER_TOKEN</code> to
-          unlock prompts, agents, skills, and settings with owner permissions.
+          Browse our collection of verified prompts, agent templates, and reusable skills. 
+          Everything here is open for public reference and integration.
         </p>
-        <OwnerTokenEntry authRequired={authRequired} nextPath={nextPath} />
       </section>
 
       <section className="list-header">
         <h1>Published Entries</h1>
-        <p>{publicCount} public entries available.</p>
+        <p>{publicCount} public entries available for use.</p>
       </section>
 
       {visibleSections.length === 0 ? (
