@@ -1,39 +1,46 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isAuthorizedOwnerToken, isOwnerTokenConfigured, OWNER_TOKEN_COOKIE } from "./lib/auth";
+import { getOwnerUsername, isAuthorizedBasicAuth, isOwnerTokenConfigured } from "./lib/auth";
 
 function isPublicPath(pathname: string) {
-  return (
-    pathname.startsWith("/public") ||
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/api/auth")
+  return pathname.startsWith("/public");
+}
+
+function createUnauthorizedResponse(request: NextRequest) {
+  const headers = new Headers({
+    "WWW-Authenticate": `Basic realm="Nexus Library", charset="UTF-8"`
+  });
+
+  if (request.nextUrl.pathname.startsWith("/api")) {
+    headers.set("Content-Type", "application/json");
+    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers
+    });
+  }
+
+  headers.set("Content-Type", "text/plain; charset=utf-8");
+  return new NextResponse(
+    `Authentication required. Sign in with username "${getOwnerUsername()}" and your OWNER_TOKEN password.`,
+    {
+      status: 401,
+      headers
+    }
   );
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
-  const token = request.cookies.get(OWNER_TOKEN_COOKIE)?.value;
-  const isAuthorized = isAuthorizedOwnerToken(token);
-
-  if (pathname === "/auth" && isOwnerTokenConfigured() && isAuthorized) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
+  const { pathname } = request.nextUrl;
 
   if (isPublicPath(pathname) || !isOwnerTokenConfigured()) {
     return NextResponse.next();
   }
 
-  if (isAuthorized) {
+  if (isAuthorizedBasicAuth(request.headers.get("authorization"))) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/api")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const authUrl = new URL("/auth", request.url);
-  authUrl.searchParams.set("next", `${pathname}${search}`);
-  return NextResponse.redirect(authUrl);
+  return createUnauthorizedResponse(request);
 }
 
 export const config = {

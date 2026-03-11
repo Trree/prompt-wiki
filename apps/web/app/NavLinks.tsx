@@ -2,12 +2,9 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useState } from "react";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Home, BookOpen, Zap, Bot, Settings, Globe, LogOut } from "lucide-react";
+import { Home, BookOpen, Zap, Bot, Settings, Globe } from "lucide-react";
 
 const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: "/", label: "Home", icon: Home },
@@ -18,28 +15,11 @@ const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
 ];
 
 export function NavLinks() {
-  const router = useRouter();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
   const isPublicPath = pathname.startsWith("/public");
-  const isAuthPath = pathname.startsWith("/auth");
   const navItems = isPublicPath
     ? [{ href: "/public", label: "Public Library", icon: Globe }]
     : NAV_ITEMS;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/auth");
-    router.refresh();
-  };
-
-  if (!mounted || isAuthPath) {
-    return null;
-  }
 
   return (
     <nav className="nav">
@@ -56,12 +36,6 @@ export function NavLinks() {
           </Link>
         );
       })}
-      {!isPublicPath ? (
-        <button className="nav-link nav-button" onClick={handleLogout} type="button">
-          <LogOut size={16} />
-          <span>Logout</span>
-        </button>
-      ) : null}
     </nav>
   );
 }

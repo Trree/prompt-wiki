@@ -28,5 +28,6 @@
 
 ## Owner Token
 
-- 设置 `OWNER_TOKEN` 环境变量后，除 `/public` 外的页面和内部 API 都需要先在 `/auth` 登录。
+- 设置 `OWNER_TOKEN` 环境变量后，除 `/public` 外的页面和内部 API 都会启用 HTTP Basic Auth。
+- 用户名默认为 `owner`，可通过 `OWNER_USERNAME` 覆盖；密码始终为 `OWNER_TOKEN`。
 - `/public` 下的页面始终可公开访问。
