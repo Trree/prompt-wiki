@@ -1,30 +1,45 @@
 import fs from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 
 const cwd = process.cwd();
 const contentRoot = path.join(cwd, "content");
+const claudeSkillsRoot = "/root/.claude/skills";
 const outputDir = path.join(contentRoot, ".generated");
 const outputFile = path.join(outputDir, "index.json");
 const checkOnly = process.argv.includes("--check");
 
 const REQUIRED_FIELDS = ["id", "type", "title", "slug", "status", "summary"];
 
-function walk(dir) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const files = [];
+function walk(dir, mode = "standard") {
+  if (!fs.existsSync(dir) && !dir.startsWith("/root/")) return [];
 
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...walk(fullPath));
-      continue;
-    }
-
-    if (entry.isFile() && entry.name.endsWith(".md")) {
-      files.push(fullPath);
+  // Mode 1: Claude Skills mode (looking for */SKILL.md)
+  if (mode === "claude-skills") {
+    try {
+      // Use shell to find files to bypass potential permission/fs issues in system dirs
+      const output = execSync(`ls -d ${dir}/*/SKILL.md 2>/dev/null`, { encoding: "utf8" });
+      return output.trim().split("\n").filter(Boolean);
+    } catch {
+      return [];
     }
   }
 
+  // Mode 2: Standard recursive .md search
+  let files = [];
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        files.push(...walk(fullPath, "standard"));
+      } else if (entry.isFile() && entry.name.endsWith(".md") && entry.name !== "index.json") {
+        files.push(fullPath);
+      }
+    }
+  } catch (err) {
+    console.warn(`Warning: Could not read directory ${dir}: ${err.message}`);
+  }
   return files;
 }
 
@@ -77,10 +92,24 @@ function parseFrontmatter(raw) {
 function buildEntry(filePath) {
   const raw = fs.readFileSync(filePath, "utf8");
   const { data, body } = parseFrontmatter(raw);
-  const relativePath = path.relative(cwd, filePath).replaceAll(path.sep, "/");
+  const relativePath = filePath.startsWith("/root/.claude") 
+    ? filePath 
+    : path.relative(cwd, filePath).replaceAll(path.sep, "/");
+
+  // Map Claude Code SKILL.md fields to internal fields
+  const id = data.id || data.name || path.basename(path.dirname(filePath));
+  const mappedData = {
+    ...data,
+    id: id,
+    type: data.type || (filePath.includes("/skills/") ? "skill" : "prompt"),
+    title: data.title || data.name || id,
+    slug: data.slug || id,
+    status: data.status || "active",
+    summary: data.summary || data.description || "",
+  };
 
   return {
-    ...data,
+    ...mappedData,
     source_path: relativePath,
     body,
     body_excerpt: body.slice(0, 160)
@@ -102,7 +131,7 @@ function validateEntry(entry) {
   }
 
   if (!["prompt", "skill", "workflow"].includes(entry.type)) {
-    errors.push("type must be one of: prompt, skill, workflow");
+    errors.push(`type must be one of: prompt, skill, workflow (got: ${entry.type})`);
   }
 
   return errors;
@@ -113,7 +142,10 @@ if (!fs.existsSync(contentRoot)) {
   process.exit(1);
 }
 
-const markdownFiles = walk(contentRoot);
+const markdownFiles = [
+  ...walk(contentRoot, "standard"),
+  ...walk(claudeSkillsRoot, "claude-skills")
+];
 const entries = markdownFiles.map(buildEntry);
 const validationErrors = [];
 
@@ -169,4 +201,3 @@ if (validationErrors.length > 0) {
 }
 
 console.log(`generated ${entries.length} content entry(ies) at ${path.relative(cwd, outputFile)}`);
-
