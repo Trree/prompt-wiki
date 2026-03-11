@@ -882,7 +882,7 @@ code {
   position: relative;
   border-radius: 20px;
   border: 1px solid var(--border);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow-sm);
 }
 
@@ -947,6 +947,7 @@ code {
   font-weight: 700;
   color: #6366f1;
   letter-spacing: 0.02em;
+  pointer-events: auto;
 }
 
 /* Selected node bar */
@@ -1038,7 +1039,7 @@ code {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   color: var(--muted);
   display: flex;

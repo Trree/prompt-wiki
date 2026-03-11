@@ -169,6 +169,10 @@ function SigmaCanvas({
       const bg = isDarkRef.current ? "#1e1e2e" : "#f5f5f7";
       const labelColor = isDarkRef.current ? "#e4e4ed" : "#374151";
 
+      // Cache neighbor set — recomputed only when selection changes
+      let cachedSelected: string | null = null;
+      let cachedNeighborSet: Set<string> = new Set();
+
       const sigma = new Sigma(graph, containerRef.current, {
         renderLabels: true,
         labelFont: "Inter, system-ui, sans-serif",
@@ -193,11 +197,17 @@ function SigmaCanvas({
 
           if (!selected) return res;
 
+          // Recompute neighbor set only when selection changes
+          if (selected !== cachedSelected) {
+            cachedSelected = selected;
+            cachedNeighborSet = new Set(graph.neighbors(selected) as string[]);
+          }
+
           if (node === selected) {
             res.size = (data.size || 6) * 1.8;
             res.zIndex = 2;
             res.highlighted = true;
-          } else if ((graph.neighbors(selected) as string[]).includes(node)) {
+          } else if (cachedNeighborSet.has(node)) {
             res.size = (data.size || 6) * 1.3;
             res.zIndex = 1;
           } else {
