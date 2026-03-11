@@ -72,6 +72,8 @@ function SigmaCanvas({
   const selectedRef = useRef<string | null>(null);
   const isDarkRef = useRef(isDark);
   const controlsRegistered = useRef(false);
+  const physicsFrameRef = useRef<number | null>(null);
+  const orientationHandlerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
 
   // Keep refs in sync without rebuilding the Sigma instance
   useEffect(() => {
@@ -334,10 +336,49 @@ function SigmaCanvas({
       sigma.on("moveBody", () => {
         onTooltip(null);
       });
+
+      // Gravity sensing — DeviceOrientation on mobile, no-op on desktop
+      const velocities = new Map<string, { vx: number; vy: number }>();
+      graph.forEachNode((id) => velocities.set(id, { vx: 0, vy: 0 }));
+
+      let gx = 0; // tilt left-right
+      let gy = 0; // tilt front-back
+
+      const handleOrientation = (e: DeviceOrientationEvent) => {
+        gx = (e.gamma ?? 0) / 45;
+        gy = (e.beta ?? 0) / 45;
+      };
+      orientationHandlerRef.current = handleOrientation;
+      window.addEventListener("deviceorientation", handleOrientation);
+
+      const GRAVITY_FORCE = 0.6;
+      const DAMPING = 0.88;
+      const CENTER_PULL = 0.015;
+
+      const runPhysics = () => {
+        if (gx !== 0 || gy !== 0) {
+          graph.forEachNode((id, attrs) => {
+            if (id === draggedNode) return;
+            const vel = velocities.get(id)!;
+            vel.vx = (vel.vx + gx * GRAVITY_FORCE - attrs.x * CENTER_PULL) * DAMPING;
+            vel.vy = (vel.vy + gy * GRAVITY_FORCE - attrs.y * CENTER_PULL) * DAMPING;
+            graph.setNodeAttribute(id, "x", attrs.x + vel.vx);
+            graph.setNodeAttribute(id, "y", attrs.y + vel.vy);
+          });
+          sigma.refresh();
+        }
+        physicsFrameRef.current = requestAnimationFrame(runPhysics);
+      };
+      physicsFrameRef.current = requestAnimationFrame(runPhysics);
     })();
 
     return () => {
       destroyed = true;
+      if (physicsFrameRef.current !== null) cancelAnimationFrame(physicsFrameRef.current);
+      if (orientationHandlerRef.current) {
+        window.removeEventListener("deviceorientation", orientationHandlerRef.current);
+        orientationHandlerRef.current = null;
+      }
       if (sigmaRef.current) {
         sigmaRef.current.kill();
         sigmaRef.current = null;
