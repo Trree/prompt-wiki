@@ -2,9 +2,10 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Home, BookOpen, Zap, Bot, Settings, Globe } from "lucide-react";
+import { Home, BookOpen, Zap, Bot, Settings, Globe, LogOut } from "lucide-react";
 
 const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: "/", label: "Home", icon: Home },
@@ -14,12 +15,34 @@ const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function NavLinks() {
+export function NavLinks({
+  hasOwnerAccess,
+  ownerTokenConfigured,
+}: {
+  hasOwnerAccess: boolean;
+  ownerTokenConfigured: boolean;
+}) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isPublicPath = pathname.startsWith("/public");
-  const navItems = isPublicPath
-    ? [{ href: "/public", label: "Public Library", icon: Globe }]
-    : NAV_ITEMS;
+  const navItems = hasOwnerAccess
+    ? NAV_ITEMS
+    : isPublicPath
+      ? [{ href: "/", label: "Public Library", icon: Globe }]
+      : [{ href: "/", label: "Home", icon: Home }];
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await fetch("/api/auth", { method: "DELETE" });
+      router.push("/");
+      router.refresh();
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <nav className="nav">
@@ -36,6 +59,17 @@ export function NavLinks() {
           </Link>
         );
       })}
+      {hasOwnerAccess && ownerTokenConfigured ? (
+        <button
+          type="button"
+          className="nav-link nav-button"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+        >
+          <LogOut size={16} />
+          <span>{isLoggingOut ? "Signing out..." : "Sign Out"}</span>
+        </button>
+      ) : null}
     </nav>
   );
 }

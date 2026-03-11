@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { NavLinks } from "./NavLinks";
+import {
+  OWNER_SESSION_COOKIE,
+  isAuthorizedOwnerSession,
+  isOwnerTokenConfigured
+} from "../lib/auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,11 +13,17 @@ export const metadata: Metadata = {
   description: "Prompt, agent, skill management system."
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(OWNER_SESSION_COOKIE)?.value;
+  const ownerTokenConfigured = isOwnerTokenConfigured();
+  const hasOwnerAccess =
+    !ownerTokenConfigured || (await isAuthorizedOwnerSession(sessionCookie));
+
   return (
     <html lang="zh-CN">
       <body>
@@ -24,7 +36,10 @@ export default function RootLayout({
                 Systematic management for prompts, agents, and skills.
               </span>
             </div>
-            <NavLinks />
+            <NavLinks
+              hasOwnerAccess={hasOwnerAccess}
+              ownerTokenConfigured={ownerTokenConfigured}
+            />
           </header>
           {children}
         </div>

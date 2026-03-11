@@ -1,42 +1,51 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getOwnerUsername, isAuthorizedBasicAuth, isOwnerTokenConfigured } from "./lib/auth";
+import {
+  OWNER_SESSION_COOKIE,
+  isAuthorizedOwnerSession,
+  isOwnerTokenConfigured
+} from "./lib/auth";
 
 function isPublicPath(pathname: string) {
   return pathname.startsWith("/public");
 }
 
 function createUnauthorizedResponse(request: NextRequest) {
-  const headers = new Headers({
-    "WWW-Authenticate": `Basic realm="Nexus Library", charset="UTF-8"`
-  });
-
   if (request.nextUrl.pathname.startsWith("/api")) {
-    headers.set("Content-Type", "application/json");
     return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
-      headers
+      headers: {
+        "Content-Type": "application/json"
+      }
     });
   }
 
-  headers.set("Content-Type", "text/plain; charset=utf-8");
-  return new NextResponse(
-    `Authentication required. Sign in with username "${getOwnerUsername()}" and your OWNER_TOKEN password.`,
-    {
-      status: 401,
-      headers
-    }
-  );
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = "/";
+  redirectUrl.searchParams.set("auth", "required");
+
+  const requestedPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+  if (requestedPath !== "/") {
+    redirectUrl.searchParams.set("next", requestedPath);
+  }
+
+  return NextResponse.redirect(redirectUrl);
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isPublicPath(pathname) || !isOwnerTokenConfigured()) {
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/api/auth") ||
+    isPublicPath(pathname) ||
+    !isOwnerTokenConfigured()
+  ) {
     return NextResponse.next();
   }
 
-  if (isAuthorizedBasicAuth(request.headers.get("authorization"))) {
+  const sessionCookie = request.cookies.get(OWNER_SESSION_COOKIE)?.value;
+  if (await isAuthorizedOwnerSession(sessionCookie)) {
     return NextResponse.next();
   }
 

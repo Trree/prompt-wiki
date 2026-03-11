@@ -1,3 +1,5 @@
+export const OWNER_SESSION_COOKIE = "nexus_owner_session";
+
 function getOwnerToken() {
   return process.env.OWNER_TOKEN?.trim() ?? "";
 }
@@ -10,43 +12,31 @@ export function isOwnerTokenConfigured() {
   return getOwnerToken().length > 0;
 }
 
-function isAuthorizedOwnerToken(token?: string) {
+export function isAuthorizedOwnerToken(token?: string) {
   const ownerToken = getOwnerToken();
   return ownerToken.length > 0 && token === ownerToken;
 }
 
-function getBasicAuthCredentials(authorizationHeader?: string | null) {
-  if (!authorizationHeader?.startsWith("Basic ")) {
-    return null;
-  }
-
-  try {
-    const encodedCredentials = authorizationHeader.slice("Basic ".length);
-    const decodedCredentials = atob(encodedCredentials);
-    const separatorIndex = decodedCredentials.indexOf(":");
-
-    if (separatorIndex < 0) {
-      return null;
-    }
-
-    return {
-      username: decodedCredentials.slice(0, separatorIndex),
-      password: decodedCredentials.slice(separatorIndex + 1)
-    };
-  } catch {
-    return null;
-  }
+async function sha256Hex(input: string) {
+  const payload = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", payload);
+  return Array.from(new Uint8Array(digest), (value) => value.toString(16).padStart(2, "0")).join("");
 }
 
-export function isAuthorizedBasicAuth(authorizationHeader?: string | null) {
-  const credentials = getBasicAuthCredentials(authorizationHeader);
+export async function createOwnerSessionValue() {
+  const ownerToken = getOwnerToken();
 
-  if (!credentials) {
+  if (!ownerToken) {
+    return "";
+  }
+
+  return sha256Hex(`nexus-owner-session:${ownerToken}`);
+}
+
+export async function isAuthorizedOwnerSession(sessionValue?: string | null) {
+  if (!sessionValue || !isOwnerTokenConfigured()) {
     return false;
   }
 
-  return (
-    credentials.username === getOwnerUsername() &&
-    isAuthorizedOwnerToken(credentials.password)
-  );
+  return sessionValue === (await createOwnerSessionValue());
 }

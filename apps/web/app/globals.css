@@ -176,6 +176,18 @@ a {
   font-weight: 450;
 }
 
+.hero-kicker,
+.directory-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 .stats-grid {
   display: grid;
   gap: 24px;
@@ -237,6 +249,113 @@ a {
   line-height: 1.5;
 }
 
+.auth-entry-bar {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+}
+
+.auth-form-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-input-group {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.auth-input-group:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.auth-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+}
+
+.auth-input-icon {
+  color: var(--muted);
+}
+
+.auth-input-minimal {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+}
+
+.auth-submit-minimal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--text);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-submit-minimal:hover {
+  background: #1e293b;
+}
+
+.auth-submit-minimal:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 8px;
+  color: #c2410c;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.auth-error-minimal {
+  font-size: 12px;
+  color: #ef4444;
+  margin: 0;
+  padding-left: 12px;
+}
+
+.entry-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 .footer-note {
   margin-top: 60px;
   padding-top: 32px;
@@ -268,6 +387,18 @@ code {
   }
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+  .auth-input-group {
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+  }
+  .auth-input-wrapper {
+    padding: 0 4px;
+  }
+  .auth-submit-minimal {
+    width: 100%;
+    justify-content: center;
   }
 }
 
