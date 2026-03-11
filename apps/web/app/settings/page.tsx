@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Plus, Trash2, Folder, ChevronLeft, X } from "lucide-react";
 
 interface Config {
   index_directories: string[];
@@ -91,47 +91,34 @@ export default function SettingsPage() {
         <p>Configure additional indexing sources for your prompt library.</p>
       </header>
 
-      <section className="detail-shell" style={{ marginTop: '22px' }}>
-        <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Index Directories</h2>
-        <p style={{ color: 'var(--muted)', marginBottom: '22px', fontSize: '15px' }}>
+      <section className="panel" style={{ marginTop: '24px' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Index Directories</h2>
+        <p style={{ color: 'var(--muted)', marginBottom: '24px', fontSize: '15px' }}>
           Add extra directories to scan for Prompts, Skills, and Workflows.
         </p>
 
-        <div style={{ display: 'grid', gap: '12px', marginBottom: '22px' }}>
+        <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
           {config?.index_directories.map((dir) => (
-            <div key={dir} style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              padding: '12px 16px', 
-              background: 'var(--panel-strong)', 
-              border: '1px solid var(--border)',
-              borderRadius: '12px'
-            }}>
-              <code style={{ fontSize: '14px', color: 'var(--accent)' }}>{dir}</code>
+            <div key={dir} className="list-item">
+              <code style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '600' }}>{dir}</code>
               <button
                 onClick={() => handleRemoveDirectory(dir)}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  color: '#e53e3e', 
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600'
-                }}
+                className="btn-danger"
+                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
               >
+                <Trash2 size={14} />
                 Remove
               </button>
             </div>
           ))}
           {config?.index_directories.length === 0 && (
             <div style={{ 
-              padding: '22px', 
+              padding: '32px', 
               textAlign: 'center', 
               color: 'var(--muted)', 
               border: '1px dashed var(--border)',
               borderRadius: '12px',
-              fontStyle: 'italic'
+              background: 'var(--surface-strong)'
             }}>
               No extra directories configured.
             </div>
@@ -141,64 +128,43 @@ export default function SettingsPage() {
         <button
           onClick={() => browseFS()}
           className="entry-link"
-          style={{ cursor: 'pointer', border: 'none' }}
+          style={{ cursor: 'pointer', border: 'none', width: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}
         >
+          <Plus size={16} />
           Add Directory
         </button>
       </section>
 
       {showPicker && fsData && (
-        <div style={{ 
-          position: 'fixed', 
-          inset: 0, 
-          background: 'rgba(0,0,0,0.5)', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          padding: '20px', 
-          zIndex: 1000 
-        }}>
-          <div className="detail-shell" style={{ 
-            width: '100%', 
-            maxWidth: '800px', 
-            maxHeight: '80vh', 
-            display: 'flex', 
-            flexDirection: 'column',
-            padding: '0',
-            overflow: 'hidden'
-          }}>
-            <div style={{ 
-              padding: '16px 22px', 
-              borderBottom: '1px solid var(--border)', 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              background: 'var(--panel-strong)'
-            }}>
-              <strong style={{ fontSize: '18px' }}>Select Directory</strong>
-              <button onClick={() => setShowPicker(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px' }}>✕</button>
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <div className="modal-header">
+              <strong>Select Directory</strong>
+              <button onClick={() => setShowPicker(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--muted)' }}><X size={20} /></button>
             </div>
             
-            <div style={{ padding: '10px 22px', background: 'rgba(0,0,0,0.03)', fontSize: '13px', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-               <code style={{ color: 'var(--muted)' }}>{currentBrowsePath}</code>
+            <div style={{ padding: '12px 24px', background: 'rgba(0,0,0,0.02)', borderBottom: '1px solid var(--border)' }}>
+               <code style={{ color: 'var(--muted)', fontSize: '12px' }}>{currentBrowsePath}</code>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
+            <div className="modal-body">
               <button
                 onClick={() => browseFS(fsData.parentPath)}
                 style={{ 
                   width: '100%', 
                   textAlign: 'left', 
-                  padding: '10px 22px', 
+                  padding: '12px 24px', 
                   background: 'none', 
                   border: 'none', 
                   cursor: 'pointer',
                   color: 'var(--accent)',
+                  fontWeight: '600',
                   display: 'flex',
-                  gap: '8px'
+                  gap: '8px',
+                  alignItems: 'center'
                 }}
               >
-                <span>📁 ..</span> <span style={{ fontSize: '12px', opacity: 0.6 }}>(Up one level)</span>
+                <ChevronLeft size={18} /> <span>..</span> <span style={{ fontSize: '12px', opacity: 0.5, fontWeight: 'normal' }}>(Up one level)</span>
               </button>
               {fsData.directories.map((dir) => (
                 <button
@@ -207,43 +173,36 @@ export default function SettingsPage() {
                   style={{ 
                     width: '100%', 
                     textAlign: 'left', 
-                    padding: '10px 22px', 
+                    padding: '12px 24px', 
                     background: 'none', 
                     border: 'none', 
                     cursor: 'pointer',
                     display: 'flex',
-                    gap: '8px'
+                    gap: '12px',
+                    alignItems: 'center'
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.03)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                 >
-                  <span>📁</span>
-                  <span>{dir.name}</span>
+                  <Folder size={18} style={{ color: 'var(--muted)' }} />
+                  <span style={{ fontWeight: '500' }}>{dir.name}</span>
                 </button>
               ))}
             </div>
 
-            <div style={{ 
-              padding: '16px 22px', 
-              borderTop: '1px solid var(--border)', 
-              display: 'flex', 
-              justifyContent: 'flex-end', 
-              gap: '12px',
-              background: 'var(--panel-strong)'
-            }}>
+            <div className="modal-footer">
               <button
                 onClick={() => setShowPicker(false)}
-                className="nav a"
-                style={{ cursor: 'pointer', border: '1px solid var(--border)', background: 'white' }}
+                className="btn-ghost"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleAddDirectory(currentBrowsePath)}
                 className="entry-link"
-                style={{ cursor: 'pointer', border: 'none' }}
+                style={{ cursor: 'pointer', border: 'none', marginTop: 0 }}
               >
-                Select Current: {pathName(currentBrowsePath, fsData.sep)}
+                Select: {pathName(currentBrowsePath, fsData.sep)}
               </button>
             </div>
           </div>

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { NavLinks } from "./NavLinks";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Prompt Library",
-  description: "Prompt, skill, workflow management starter."
+  title: "Nexus Library",
+  description: "Prompt, skill, workflow management system."
 };
 
 export default function RootLayout({
@@ -18,19 +18,13 @@ export default function RootLayout({
         <div className="shell">
           <header className="topbar">
             <div className="brand">
-              <span className="brand-kicker">Prompt System</span>
-              <strong className="brand-title">Prompt. Skill. Workflow.</strong>
+              <span className="brand-kicker">Prompt Library</span>
+              <strong className="brand-title">Nexus</strong>
               <span className="brand-subtitle">
-                Markdown-driven knowledge base. Version-controlled.
+                Systematic management for prompts, skills, and workflows.
               </span>
             </div>
-            <nav className="nav">
-              <Link href="/">Home</Link>
-              <Link href="/prompts">Prompts</Link>
-              <Link href="/skills">Skills</Link>
-              <Link href="/workflows">Workflows</Link>
-              <Link href="/settings">Settings</Link>
-            </nav>
+            <NavLinks />
           </header>
           {children}
         </div>
