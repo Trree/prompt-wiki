@@ -1,18 +1,14 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
-import { getEntriesByRouteType, getRouteTypeForEntry, routeGroups } from "../../lib/content";
-
-export async function generateStaticParams() {
-  return routeGroups.map((group) => ({
-    type: group.routeType
-  }));
-}
+import { getEntriesByRouteType, getRouteTypeForEntry } from "../../lib/content";
 
 export default async function TypeListingPage({
   params
 }: {
   params: Promise<{ type: string }>;
 }) {
+  noStore();
   const { type } = await params;
   const result = await getEntriesByRouteType(type);
 

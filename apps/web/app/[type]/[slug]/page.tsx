@@ -1,35 +1,19 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import {
   getEntryByRouteTypeAndSlug,
-  getEntriesForStaticParams,
   getRelatedEntriesForEntry,
-  getRouteTypeForEntry,
-  routeGroups
+  getRouteTypeForEntry
 } from "../../../lib/content";
-
-export async function generateStaticParams() {
-  const params = [];
-
-  for (const group of routeGroups) {
-    const entries = await getEntriesForStaticParams(group.routeType);
-    for (const entry of entries) {
-      params.push({
-        type: group.routeType,
-        slug: entry.slug
-      });
-    }
-  }
-
-  return params;
-}
 
 export default async function EntryDetailPage({
   params
 }: {
   params: Promise<{ type: string; slug: string }>;
 }) {
+  noStore();
   const { type, slug } = await params;
   const entry = await getEntryByRouteTypeAndSlug(type, slug);
 

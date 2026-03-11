@@ -29,6 +29,7 @@ export default function RootLayout({
               <Link href="/prompts">Prompts</Link>
               <Link href="/skills">Skills</Link>
               <Link href="/workflows">Workflows</Link>
+              <Link href="/settings">Settings</Link>
             </nav>
           </header>
           {children}

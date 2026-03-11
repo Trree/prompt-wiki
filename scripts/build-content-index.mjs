@@ -21,17 +21,53 @@ if (fs.existsSync(configPath)) {
 
 const REQUIRED_FIELDS = ["id", "type", "title", "slug", "status", "summary"];
 
-function walk(dir) {
+function resolveEntryKind(fullPath, entry) {
+  if (entry.isDirectory()) return "directory";
+  if (entry.isFile()) return "file";
+  if (!entry.isSymbolicLink()) return "other";
+
+  try {
+    const stats = fs.statSync(fullPath);
+    if (stats.isDirectory()) return "directory";
+    if (stats.isFile()) return "file";
+  } catch (err) {
+    console.warn(`Warning: Could not resolve symlink ${fullPath}: ${err.message}`);
+  }
+
+  return "other";
+}
+
+function walk(dir, seen = new Set()) {
   if (!fs.existsSync(dir)) return [];
+
+  let realDir;
+  try {
+    realDir = fs.realpathSync(dir);
+  } catch (err) {
+    console.warn(`Warning: Could not resolve directory ${dir}: ${err.message}`);
+    return [];
+  }
+
+  if (seen.has(realDir)) {
+    return [];
+  }
+  seen.add(realDir);
+
+  const skillManifestPath = path.join(dir, "SKILL.md");
+  if (fs.existsSync(skillManifestPath) && fs.statSync(skillManifestPath).isFile()) {
+    return [skillManifestPath];
+  }
 
   let files = [];
   try {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        files.push(...walk(fullPath));
-      } else if (entry.isFile() && entry.name.endsWith(".md") && entry.name !== "index.json") {
+      const kind = resolveEntryKind(fullPath, entry);
+
+      if (kind === "directory") {
+        files.push(...walk(fullPath, seen));
+      } else if (kind === "file" && entry.name.endsWith(".md") && entry.name !== "index.json") {
         files.push(fullPath);
       }
     }
