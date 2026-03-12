@@ -1,5 +1,7 @@
+import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 
 export type EntryType = "prompt" | "agent" | "skill";
 export type RouteType = "prompts" | "agents" | "skills";
@@ -98,12 +100,19 @@ const HOME_GRAPH_LAYOUT_COMPACT = [
   { x: 68, y: 76 }
 ];
 
+const execFileAsync = promisify(execFile);
+let ensureContentIndexPromise: Promise<void> | null = null;
+
 function resolveIndexPath() {
   return path.resolve(process.cwd(), "..", "..", "content", ".generated", "index.json");
 }
 
 function resolveConfigPath() {
   return path.resolve(process.cwd(), "..", "..", "config.json");
+}
+
+function resolveContentIndexScriptPath() {
+  return path.resolve(process.cwd(), "..", "..", "scripts", "build-content-index.mjs");
 }
 
 function resolveRepoRoot() {
@@ -131,9 +140,34 @@ function toRouteType(entryType: EntryType): RouteType {
   return `${entryType}s` as RouteType;
 }
 
+async function ensureContentIndex() {
+  const filePath = resolveIndexPath();
+
+  try {
+    await fs.access(filePath);
+    return;
+  } catch {
+    // Fall through and build the index on demand.
+  }
+
+  if (!ensureContentIndexPromise) {
+    ensureContentIndexPromise = (async () => {
+      console.warn(`Content index missing at ${filePath}. Regenerating it now.`);
+      await execFileAsync(process.execPath, [resolveContentIndexScriptPath()], {
+        cwd: resolveRepoRoot()
+      });
+    })().finally(() => {
+      ensureContentIndexPromise = null;
+    });
+  }
+
+  await ensureContentIndexPromise;
+}
+
 export async function getContentIndex(): Promise<ContentIndex> {
   const filePath = resolveIndexPath();
   try {
+    await ensureContentIndex();
     const raw = await fs.readFile(filePath, "utf8");
     const index = JSON.parse(raw) as ContentIndex;
     const config = await getAppConfig();

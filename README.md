@@ -41,11 +41,15 @@ npm run content:check
 ```bash
 # 启动 Web 前端（已配置根目录代理）
 npm run dev
+
+# 生产模式本地启动（监听 127.0.0.1:3000）
+npm run start:local
 ```
 
 说明：
 - `content:index` 会扫描 `content/` 并生成索引文件 `content/.generated/index.json`。
 - `npm run dev` 自动在根目录触发 `npm run dev -w web`。
+- `npm run start:local` 会先生成内容索引，再以生产模式启动本地服务。
 
 生成文件位置：
 
@@ -56,6 +60,24 @@ content/.generated/index.json
 ## 运行前提
 
 - Node.js 18+
+
+## Windows 一键启动
+
+在 Windows 上，安装 Node.js 18+ 后，直接双击仓库根目录的 `start-local.bat` 即可。
+
+这个脚本会自动处理：
+
+1. 检查 `node` / `npm`
+2. 首次运行时自动执行 `npm install`
+3. 首次运行时自动执行 `npm run build`
+4. 启动本地服务 `http://127.0.0.1:3000`
+5. 服务就绪后自动打开浏览器
+
+如果你修改了前端代码，建议手动重新执行一次：
+
+```bash
+npm run build
+```
 
 ## 下一步建议
 
