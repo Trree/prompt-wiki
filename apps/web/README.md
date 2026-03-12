@@ -28,6 +28,6 @@
 
 ## Owner Token
 
-- 设置 `OWNER_TOKEN` 环境变量后，除 `/public` 外的页面和内部 API 都会启用 HTTP Basic Auth。
-- 用户名默认为 `owner`，可通过 `OWNER_USERNAME` 覆盖；密码始终为 `OWNER_TOKEN`。
+- 在仓库根目录 `config.json` 中设置非空 `OWNER_TOKEN` 后，除 `/public` 外的页面和内部 API 会启用权限控制。
+- `OWNER_TOKEN` 未配置或为空字符串时，默认开放所有页面和内部 API，方便别人直接使用。
 - `/public` 下的页面始终可公开访问。

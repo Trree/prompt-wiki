@@ -3,50 +3,19 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
+import { configPath, normalizeConfig, readConfig } from "../../../lib/config";
 
 const execAsync = promisify(exec);
-const builtInContentDirectory = path.resolve(process.cwd(), "..", "..", "content");
-const configPath = path.resolve(process.cwd(), "..", "..", "config.json");
 const scriptPath = path.resolve(process.cwd(), "..", "..", "scripts", "build-content-index.mjs");
-const defaultConfig = {
-  index_directories: [],
-  public_directories: [builtInContentDirectory],
-  entry_visibility_overrides: {}
-};
 
 export async function GET() {
-  try {
-    const raw = await fs.readFile(configPath, "utf8");
-    const parsed = JSON.parse(raw);
-    const publicDirectories = Array.isArray(parsed.public_directories)
-      ? Array.from(new Set(parsed.public_directories.map((directory: string) => path.resolve(directory))))
-      : defaultConfig.public_directories;
-
-    return NextResponse.json({
-      ...defaultConfig,
-      ...parsed,
-      public_directories: publicDirectories
-    });
-  } catch (err) {
-    return NextResponse.json(defaultConfig);
-  }
+  return NextResponse.json(await readConfig());
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const nextConfig = {
-      ...defaultConfig,
-      ...body,
-      index_directories: Array.isArray(body.index_directories) ? body.index_directories : [],
-      public_directories: Array.isArray(body.public_directories)
-        ? Array.from(new Set(body.public_directories.map((directory: string) => path.resolve(directory))))
-        : defaultConfig.public_directories,
-      entry_visibility_overrides:
-        body.entry_visibility_overrides && typeof body.entry_visibility_overrides === "object"
-          ? body.entry_visibility_overrides
-          : {}
-    };
+    const nextConfig = normalizeConfig(body);
 
     await fs.writeFile(configPath, JSON.stringify(nextConfig, null, 2), "utf8");
     

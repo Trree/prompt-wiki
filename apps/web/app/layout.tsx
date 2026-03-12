@@ -20,7 +20,7 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(OWNER_SESSION_COOKIE)?.value;
-  const ownerTokenConfigured = isOwnerTokenConfigured();
+  const ownerTokenConfigured = await isOwnerTokenConfigured();
   const hasOwnerAccess =
     !ownerTokenConfigured || (await isAuthorizedOwnerSession(sessionCookie));
 

@@ -239,7 +239,7 @@ export default async function HomePage({
   noStore();
 
   const [{ auth, next }, cookieStore] = await Promise.all([searchParams, cookies()]);
-  const ownerTokenConfigured = isOwnerTokenConfigured();
+  const ownerTokenConfigured = await isOwnerTokenConfigured();
 
   if (!ownerTokenConfigured) {
     return <OwnerHomePage />;

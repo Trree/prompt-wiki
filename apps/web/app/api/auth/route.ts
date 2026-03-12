@@ -13,7 +13,7 @@ function createUnauthorizedResponse() {
 }
 
 export async function POST(request: Request) {
-  if (!isOwnerTokenConfigured()) {
+  if (!(await isOwnerTokenConfigured())) {
     return NextResponse.json({ ok: true });
   }
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return createUnauthorizedResponse();
   }
 
-  if (!isAuthorizedOwnerToken(token)) {
+  if (!(await isAuthorizedOwnerToken(token))) {
     return createUnauthorizedResponse();
   }
 

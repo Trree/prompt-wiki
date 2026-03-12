@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Plus, Trash2, Folder, ChevronLeft, X, Globe, Lock } from "lucide-react";
 
 interface Config {
+  OWNER_TOKEN?: string;
   index_directories: string[];
   public_directories: string[];
   entry_visibility_overrides: Record<string, "public" | "private">;

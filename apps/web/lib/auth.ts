@@ -1,19 +1,18 @@
+import { readConfig } from "./config";
+
 export const OWNER_SESSION_COOKIE = "nexus_owner_session";
 
-function getOwnerToken() {
-  return process.env.OWNER_TOKEN?.trim() ?? "";
+async function getOwnerToken() {
+  const config = await readConfig();
+  return config.OWNER_TOKEN;
 }
 
-export function getOwnerUsername() {
-  return process.env.OWNER_USERNAME?.trim() || "owner";
+export async function isOwnerTokenConfigured() {
+  return (await getOwnerToken()).length > 0;
 }
 
-export function isOwnerTokenConfigured() {
-  return getOwnerToken().length > 0;
-}
-
-export function isAuthorizedOwnerToken(token?: string) {
-  const ownerToken = getOwnerToken();
+export async function isAuthorizedOwnerToken(token?: string) {
+  const ownerToken = await getOwnerToken();
   return ownerToken.length > 0 && token === ownerToken;
 }
 
@@ -24,7 +23,7 @@ async function sha256Hex(input: string) {
 }
 
 export async function createOwnerSessionValue() {
-  const ownerToken = getOwnerToken();
+  const ownerToken = await getOwnerToken();
 
   if (!ownerToken) {
     return "";
@@ -34,7 +33,7 @@ export async function createOwnerSessionValue() {
 }
 
 export async function isAuthorizedOwnerSession(sessionValue?: string | null) {
-  if (!sessionValue || !isOwnerTokenConfigured()) {
+  if (!sessionValue || !(await isOwnerTokenConfigured())) {
     return false;
   }
 
