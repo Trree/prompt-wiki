@@ -5,5 +5,14 @@
   "public_directories": [
     "/root/workspace/codex/prompt/content"
   ],
-  "entry_visibility_overrides": {}
+  "entry_visibility_overrides": {},
+  "metadata_overrides": {
+    "article-to-knowledge-base": {
+      "tags": ["content-ops", "knowledge-management"]
+    },
+    "research-synthesizer": {
+      "tags": ["research", "content-ops"],
+      "prompts": ["generate-outline"]
+    }
+  }
 }

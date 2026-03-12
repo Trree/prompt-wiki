@@ -36,6 +36,7 @@ export type AppConfig = {
   index_directories: string[];
   public_directories: string[];
   entry_visibility_overrides: Record<string, "public" | "private">;
+  metadata_overrides?: Record<string, Partial<ContentEntry>>;
 };
 
 export type RelatedEntry = ContentEntry & {
@@ -134,7 +135,39 @@ export async function getContentIndex(): Promise<ContentIndex> {
   const filePath = resolveIndexPath();
   try {
     const raw = await fs.readFile(filePath, "utf8");
-    return JSON.parse(raw) as ContentIndex;
+    const index = JSON.parse(raw) as ContentIndex;
+    const config = await getAppConfig();
+
+    // Apply metadata overrides if they exist
+    if (config.metadata_overrides) {
+      index.entries = index.entries.map(entry => {
+        const override = config.metadata_overrides![entry.id];
+        if (override) {
+          const result = { ...entry, ...override };
+
+          // Explicitly merge relationship arrays to reinforce the graph
+          const arrayFields: (keyof ContentEntry)[] = ["tags", "prompts", "skills"];
+          for (const field of arrayFields) {
+            const entryVal = entry[field];
+            const overrideVal = override[field];
+
+            if (Array.isArray(entryVal) && Array.isArray(overrideVal)) {
+              // Merge and deduplicate
+              result[field] = Array.from(new Set([...(entryVal as string[]), ...(overrideVal as string[])])) as any;
+            } else if (Array.isArray(overrideVal)) {
+              result[field] = overrideVal as any;
+            } else if (Array.isArray(entryVal)) {
+              result[field] = entryVal as any;
+            }
+          }
+
+          return result;
+        }
+        return entry;
+      });
+    }
+
+    return index;
   } catch (err) {
     console.error(`Failed to read content index at ${filePath}:`, err);
     return {
@@ -171,14 +204,16 @@ export async function getAppConfig(): Promise<AppConfig> {
     return {
       index_directories: parsed.index_directories ?? [],
       public_directories: publicDirectories,
-      entry_visibility_overrides: entryVisibilityOverrides
+      entry_visibility_overrides: entryVisibilityOverrides,
+      metadata_overrides: parsed.metadata_overrides
     };
   } catch (err) {
     console.error(`Failed to read config at ${filePath}:`, err);
     return {
       index_directories: [],
       public_directories: getDefaultPublicDirectories(),
-      entry_visibility_overrides: {}
+      entry_visibility_overrides: {},
+      metadata_overrides: {}
     };
   }
 }
