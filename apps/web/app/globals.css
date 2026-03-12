@@ -1,8 +1,8 @@
 :root {
   color-scheme: light dark;
-  --bg: #fafafa;
+  --bg: #f8fafc;
   --bg-soft: #f1f5f9;
-  --bg-muted: #f8fafc;
+  --bg-muted: #e2e8f0;
   --surface: #ffffff;
   --text: #0f172a;
   --muted: #64748b;
@@ -404,7 +404,6 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 16px;
   font-size: 14px;
   font-weight: 700;
   color: var(--accent);
@@ -724,6 +723,26 @@ code {
   gap: 64px;
 }
 
+.directory-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.directory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.directory-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .knowledge-graph-section {
   display: flex;
   flex-direction: column;
@@ -922,7 +941,7 @@ code {
   border: 1px solid var(--border);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
-  background: var(--surface);
+  background: var(--bg);
 }
 
 .sigma-graph-container {
@@ -1111,6 +1130,22 @@ code {
   border-color: var(--accent);
 }
 
+.entry-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
 .entry-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow);
@@ -1192,8 +1227,8 @@ code {
   align-items: center;
   padding: 4px 8px;
   border-radius: 6px;
-  background: var(--bg-soft);
-  color: #475569;
+  background: var(--category-bg, var(--bg-soft));
+  color: var(--category-color, #475569);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1431,8 +1466,11 @@ code {
 }
 
 .detail-shell {
-  padding: 40px;
-  border-radius: 20px;
+  padding: 60px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 .detail-header {

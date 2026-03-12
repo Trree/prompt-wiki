@@ -78,15 +78,12 @@ export default async function TypeListingPage({
                     "--category-bg": meta.bg
                   } as React.CSSProperties}
                 >
-                  <div className="entry-card-header">
-                    <div className="entry-card-icon">
-                      <Icon size={20} />
-                    </div>
-                    <div className="badge-row">
-                      <span className={`badge status-${entry.status.toLowerCase()}`}>
-                        {entry.status}
+                  <div className="badge-row">
+                    {entry.tags?.map((tag) => (
+                      <span className="badge" key={tag}>
+                        {tag}
                       </span>
-                    </div>
+                    ))}
                   </div>
                   
                   <div>
@@ -96,11 +93,12 @@ export default async function TypeListingPage({
 
                   <div className="entry-card-footer">
                     <div className="badge-row">
-                      {entry.tags?.slice(0, 2).map((tag) => (
-                        <span className="badge" key={tag}>
-                          {tag}
-                        </span>
-                      ))}
+                      <div className="entry-card-icon" style={{ width: 24, height: 24, padding: 0, borderRadius: 6, background: meta.bg, color: meta.color }}>
+                        <Icon size={14} />
+                      </div>
+                      <span className={`badge status-${entry.status.toLowerCase()}`}>
+                        {entry.status}
+                      </span>
                     </div>
                     <div className="entry-link-arrow">
                       <ArrowRight size={18} />

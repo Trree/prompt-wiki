@@ -1,4 +1,5 @@
 {
+  "OWNER_TOKEN": "your-token-private",
   "index_directories": [
     "/root/.claude/skills"
   ],

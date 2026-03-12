@@ -122,15 +122,12 @@ export default async function EntryDetailPage({
                     "--category-bg": itemMeta.bg
                   } as React.CSSProperties}
                 >
-                  <div className="entry-card-header">
-                    <div className="entry-card-icon">
-                      <ItemIcon size={20} />
-                    </div>
-                    <div className="badge-row">
-                      <span className={`badge status-${item.status.toLowerCase()}`}>
-                        {item.status}
+                  <div className="badge-row">
+                    {item.tags?.map((tag) => (
+                      <span className="badge" key={tag}>
+                        {tag}
                       </span>
-                    </div>
+                    ))}
                   </div>
                   
                   <div>
@@ -140,6 +137,12 @@ export default async function EntryDetailPage({
 
                   <div className="entry-card-footer">
                     <div className="badge-row">
+                      <div className="entry-card-icon" style={{ width: 24, height: 24, padding: 0, borderRadius: 6, background: itemMeta.bg, color: itemMeta.color }}>
+                        <ItemIcon size={14} />
+                      </div>
+                      <span className={`badge status-${item.status.toLowerCase()}`}>
+                        {item.status}
+                      </span>
                       <span className="badge" style={{ background: itemMeta.bg, color: itemMeta.color }}>
                         {item.type}
                       </span>

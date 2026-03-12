@@ -175,7 +175,7 @@ function SigmaCanvas({
         });
       }
 
-      const bg = isDarkRef.current ? "#0b0f19" : "#ffffff";
+      const bg = isDarkRef.current ? "#0b0f19" : "#f8fafc";
       const labelColor = isDarkRef.current ? "#94a3b8" : "#475569";
 
       let hoveredNode: string | null = null;

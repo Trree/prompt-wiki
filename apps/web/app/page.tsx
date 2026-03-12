@@ -207,21 +207,40 @@ async function PublicHomePage({
               </div>
 
               <div className="card-grid">
-                {section.listing?.entries.map((entry) => (
-                  <article className="entry-card" key={entry.id}>
-                    <div className="badge-row">
-                      <span className="badge">{entry.type}</span>
-                      <span className="badge">{entry.status}</span>
-                    </div>
-                    <div>
-                      <h2>{entry.title}</h2>
-                      <p>{entry.summary}</p>
-                    </div>
-                    <Link className="entry-link" href={`/public/${section.group.routeType}/${entry.slug}`}>
-                      Open public page
-                    </Link>
-                  </article>
-                ))}
+                {section.listing?.entries.map((entry) => {
+                  const meta = CATEGORY_META[section.group.routeType];
+                  return (
+                    <article 
+                      className="entry-card" 
+                      key={entry.id}
+                      style={{ 
+                        "--category-color": meta.color,
+                        "--category-bg": meta.bg 
+                      } as React.CSSProperties}
+                    >
+                      <div className="badge-row">
+                        {entry.tags?.map((tag) => (
+                          <span key={tag} className="badge tag-badge">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <div>
+                        <h2>{entry.title}</h2>
+                        <p>{entry.summary}</p>
+                      </div>
+                      <div className="entry-card-footer">
+                        <div className="badge-row">
+                          <span className="badge">{entry.type}</span>
+                          <span className="badge">{entry.status}</span>
+                        </div>
+                        <Link className="entry-link" href={`/public/${section.group.routeType}/${entry.slug}`}>
+                          Open →
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           ))}
