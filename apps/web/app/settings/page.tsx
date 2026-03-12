@@ -169,7 +169,7 @@ export default function SettingsPage() {
     []
   );
 
-  if (loading) return <div className="shell">Loading...</div>;
+  if (loading) return <div className="shell">Loading…</div>;
 
   return (
     <main className="shell">

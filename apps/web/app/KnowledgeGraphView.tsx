@@ -5,11 +5,11 @@ import Link from "next/link";
 import { Network, ZoomIn, ZoomOut, Maximize, Settings2, ChevronRight, ChevronDown, X } from "lucide-react";
 import type { HomeKnowledgeGraphNode, RouteType, HomeKnowledgeGraphEdge } from "../lib/content";
 
-// Category colors
+// Category colors - Match the new sophisticated tones in globals.css
 const CATEGORY_COLORS: Record<RouteType, string> = {
-  prompts: "#6366f1",
-  skills: "#10b981",
-  agents: "#f59e0b",
+  prompts: "#4f46e5",
+  skills: "#059669",
+  agents: "#d97706",
 };
 
 const CATEGORY_LABELS: Record<RouteType, string> = {
@@ -20,7 +20,7 @@ const CATEGORY_LABELS: Record<RouteType, string> = {
 
 // Dim a color by mixing it toward a background color
 function dimColor(hex: string, amount: number, isDark: boolean): string {
-  const bg = isDark ? { r: 30, g: 30, b: 46 } : { r: 245, g: 245, b: 247 };
+  const bg = isDark ? { r: 11, g: 15, b: 25 } : { r: 250, g: 250, b: 250 };
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
@@ -115,106 +115,117 @@ function SigmaCanvas({
         }
       }
 
-      // Add nodes — golden angle spiral for non-overlapping initial positions
-      const visibleNodes = nodes.filter((n) => visibleNodeIds.has(n.id));
+      const visibleNodes = nodes.filter((n) => activeFilters.has(n.routeType));
       const totalN = visibleNodes.length;
+
+      // Add nodes — Tighter Organic Clusters
+      const sectors: Record<RouteType, { angle: number; color: string }> = {
+        prompts: { angle: 0, color: CATEGORY_COLORS.prompts },
+        skills: { angle: (2 * Math.PI) / 3, color: CATEGORY_COLORS.skills },
+        agents: { angle: (4 * Math.PI) / 3, color: CATEGORY_COLORS.agents },
+      };
+
       visibleNodes.forEach((node, i) => {
-        const phi = i * Math.PI * (3 - Math.sqrt(5));
-        const r = 40 * Math.sqrt(i / Math.max(totalN, 1));
+        const sector = sectors[node.routeType];
+        const angle = sector.angle + (Math.random() - 0.5) * 1.5;
+        const dist = 15 + Math.random() * 25;
+        
+        // Node size based on degree (number of connections)
         const degree = degreeMap.get(node.id) ?? 0;
-        const size = Math.min(20, 4 + degree * 2);
+        const size = 3 + Math.sqrt(degree) * 2.5;
+        
         graph.addNode(node.id, {
-          x: r * Math.cos(phi),
-          y: r * Math.sin(phi),
+          x: dist * Math.cos(angle),
+          y: dist * Math.sin(angle),
           size,
-          color: CATEGORY_COLORS[node.routeType],
+          color: sector.color,
           label: node.title,
           routeType: node.routeType,
           slug: node.slug,
           summary: node.summary,
+          degree,
         });
       });
 
-      // Add edges
-      const edgeColor = isDarkRef.current ? "#3a3a5a" : "#d1d5db";
+      // Add edges — High Visibility Skeleton
+      const edgeColor = isDarkRef.current ? "rgba(148, 163, 184, 0.3)" : "#cbd5e1"; // Solid Slate 300 for clear visibility
       for (const edge of edges) {
-        if (
-          visibleNodeIds.has(edge.sourceId) &&
-          visibleNodeIds.has(edge.targetId) &&
-          graph.hasNode(edge.sourceId) &&
-          graph.hasNode(edge.targetId)
-        ) {
+        if (graph.hasNode(edge.sourceId) && graph.hasNode(edge.targetId)) {
           try {
             graph.addEdge(edge.sourceId, edge.targetId, {
-              size: 1,
+              size: 1.2, // Thicker lines
               color: edgeColor,
             });
-          } catch (_) {
-            // Ignore duplicate edges
-          }
+          } catch (_) {}
         }
       }
 
-      // Run ForceAtlas2 synchronously — fine for small graphs (< 500 nodes)
+      // Structured Organic Physics - Tighter Clustering
       if (graph.order > 1) {
         forceAtlas2.assign(graph, {
-          iterations: 400,
+          iterations: 1200,
           settings: {
-            gravity: 8,
-            scalingRatio: 1.5,
-            slowDown: 5,
-            barnesHutOptimize: graph.order > 100,
+            gravity: 4.5, // Even stronger pull
+            scalingRatio: 2.2, // Even tighter grouping
+            slowDown: 10,
+            edgeWeightInfluence: 1.8, // Connect nodes more strongly
+            barnesHutOptimize: true,
+            strongGravityMode: true,
           },
         });
       }
 
-      const bg = isDarkRef.current ? "#1e1e2e" : "#f5f5f7";
-      const labelColor = isDarkRef.current ? "#e4e4ed" : "#374151";
+      const bg = isDarkRef.current ? "#0b0f19" : "#ffffff";
+      const labelColor = isDarkRef.current ? "#94a3b8" : "#475569";
 
-      // Cache neighbor set — recomputed only when selection changes
+      let hoveredNode: string | null = null;
       let cachedSelected: string | null = null;
       let cachedNeighborSet: Set<string> = new Set();
 
       const sigma = new Sigma(graph, containerRef.current, {
         renderLabels: true,
-        labelFont: "Inter, system-ui, sans-serif",
-        labelSize: 11,
+        labelFont: "'Inter', system-ui, sans-serif",
+        labelSize: 12,
         labelWeight: "600",
         labelColor: { color: labelColor },
-        labelRenderedSizeThreshold: 0, // Always show labels regardless of zoom
-        labelDensity: 0.7,
-        labelGridCellSize: 60,
-        defaultNodeColor: "#6b7280",
+        labelRenderedSizeThreshold: 9, // Show labels even earlier
+        labelDensity: 1.5,
+        labelGridCellSize: 50,
+        defaultNodeColor: "#94a3b8",
         defaultEdgeColor: edgeColor,
         minCameraRatio: 0.05,
-        maxCameraRatio: 5,
-        hideEdgesOnMove: false,
+        maxCameraRatio: 10,
         zIndex: true,
         backgroundColor: bg,
 
         nodeReducer: (node: string, data: any) => {
           const res = { ...data };
           const selected = selectedRef.current;
+          const hovered = hoveredNode;
+          const active = selected || hovered;
           const dark = isDarkRef.current;
 
-          if (!selected) return res;
-
-          // Recompute neighbor set only when selection changes
-          if (selected !== cachedSelected) {
-            cachedSelected = selected;
-            cachedNeighborSet = new Set(graph.neighbors(selected) as string[]);
+          if (!active) {
+            // Default organic state - show labels for most nodes
+            res.label = data.degree > 1 ? data.label : ""; 
+            return res;
           }
 
-          if (node === selected) {
-            res.size = (data.size || 6) * 1.8;
-            res.zIndex = 2;
+          if (active !== cachedSelected) {
+            cachedSelected = active;
+            cachedNeighborSet = new Set(graph.neighbors(active) as string[]);
+          }
+
+          if (node === active) {
+            res.zIndex = 100;
             res.highlighted = true;
           } else if (cachedNeighborSet.has(node)) {
-            res.size = (data.size || 6) * 1.3;
-            res.zIndex = 1;
+            res.zIndex = 50;
+            res.label = data.label; 
           } else {
-            res.color = dimColor(data.color || "#6b7280", 0.2, dark);
-            res.size = (data.size || 6) * 0.6;
+            // Dim context but keep slightly visible
+            res.color = dark ? "rgba(148, 163, 184, 0.12)" : "rgba(203, 213, 225, 0.25)";
+            res.label = "";
             res.zIndex = 0;
           }
           return res;
@@ -223,19 +234,20 @@ function SigmaCanvas({
         edgeReducer: (edge: string, data: any) => {
           const res = { ...data };
           const selected = selectedRef.current;
+          const hovered = hoveredNode;
+          const active = selected || hovered;
           const dark = isDarkRef.current;
 
-          if (!selected) return res;
+          if (!active) return res;
 
           const [source, target] = graph.extremities(edge) as [string, string];
-          if (source === selected || target === selected) {
-            res.color = dark ? "#7c7caa" : "#9ca3af";
-            res.size = 2;
-            res.zIndex = 2;
+          if (source === active || target === active) {
+            res.color = dark ? "#818cf8" : "#2563eb"; // Solid, high-contrast colors
+            res.size = 3.0;
+            res.zIndex = 10;
           } else {
-            res.color = dimColor(dark ? "#3a3a5a" : "#d1d5db", 0.1, dark);
-            res.size = 0.3;
-            res.zIndex = 0;
+            res.color = dark ? "rgba(30, 41, 59, 0.15)" : "rgba(226, 232, 240, 0.5)";
+            res.size = 0.8;
           }
           return res;
         },
@@ -302,7 +314,7 @@ function SigmaCanvas({
           onSelectNode(node);
           const attrs = graph.getNodeAttributes(node);
           sigma.getCamera().animate(
-            { x: attrs.x, y: attrs.y, ratio: 0.5 },
+            { x: attrs.x, y: attrs.y, ratio: 0.35 },
             { duration: 400 }
           );
         }
@@ -313,8 +325,11 @@ function SigmaCanvas({
         onSelectNode(null);
       });
 
-      // Hover → show tooltip at node's viewport position
+      // Hover → highlight and show tooltip
       sigma.on("enterNode", ({ node }: { node: string }) => {
+        hoveredNode = node;
+        sigma.refresh();
+
         const nodeAttrs = graph.getNodeAttributes(node);
         const nodeData = nodes.find((n) => n.id === node);
         if (!nodeData || !containerRef.current) return;
@@ -329,6 +344,8 @@ function SigmaCanvas({
       });
 
       sigma.on("leaveNode", () => {
+        hoveredNode = null;
+        sigma.refresh();
         onTooltip(null);
       });
 
@@ -537,13 +554,13 @@ export function KnowledgeGraphView({
 
         {/* Zoom controls */}
         <div className="graph-zoom-actions">
-          <button onClick={() => controlsRef.current?.zoomIn()} title="Zoom In">
+          <button onClick={() => controlsRef.current?.zoomIn()} title="Zoom In" aria-label="Zoom in">
             <ZoomIn size={18} />
           </button>
-          <button onClick={() => controlsRef.current?.zoomOut()} title="Zoom Out">
+          <button onClick={() => controlsRef.current?.zoomOut()} title="Zoom Out" aria-label="Zoom out">
             <ZoomOut size={18} />
           </button>
-          <button onClick={() => controlsRef.current?.reset()} title="Reset view">
+          <button onClick={() => controlsRef.current?.reset()} title="Reset view" aria-label="Reset view">
             <Maximize size={18} />
           </button>
         </div>

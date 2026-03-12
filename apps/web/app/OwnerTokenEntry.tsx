@@ -98,7 +98,7 @@ export function OwnerTokenEntry({
                 type="password"
                 name="ownerToken"
                 autoComplete="current-password"
-                placeholder="Enter Owner Token..."
+                placeholder="Enter Owner Token…"
                 value={token}
                 onChange={(event) => setToken(event.target.value)}
                 disabled={isSubmitting}
@@ -110,7 +110,7 @@ export function OwnerTokenEntry({
           
           <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
             <button className="auth-submit-minimal" type="submit" disabled={isSubmitting} style={{ width: "100%", justifyContent: "center", padding: "12px" }}>
-              {isSubmitting ? "Verifying..." : "Unlock Full Workspace"}
+              {isSubmitting ? "Verifying…" : "Unlock Full Workspace"}
               <ArrowRight size={16} />
             </button>
           </div>

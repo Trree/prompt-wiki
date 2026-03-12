@@ -82,7 +82,7 @@ export function NavLinks({
             disabled={isLoggingOut}
           >
             <LogOut size={16} />
-            <span>{isLoggingOut ? "Signing out..." : "Sign Out"}</span>
+            <span>{isLoggingOut ? "Signing out…" : "Sign Out"}</span>
           </button>
         ) : ownerTokenConfigured ? (
           <button
