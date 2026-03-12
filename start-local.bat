@@ -31,6 +31,14 @@ if not exist "node_modules" (
   )
 )
 
+echo [Prompt Wiki] Updating content index...
+call npm run content:index
+if errorlevel 1 (
+  echo [Prompt Wiki] content:index failed.
+  pause
+  exit /b 1
+)
+
 if not exist "apps\web\.next\BUILD_ID" (
   echo [Prompt Wiki] First-time build in progress...
   call npm run build
@@ -42,7 +50,7 @@ if not exist "apps\web\.next\BUILD_ID" (
 )
 
 echo [Prompt Wiki] Starting server at http://127.0.0.1:3000 ...
-start "Prompt Wiki Server" cmd /k "cd /d ""%ROOT_DIR%"" && npm run start:local"
+start "Prompt Wiki Server" cmd /k "cd /d ""%ROOT_DIR%"" && npm run start:local:server"
 
 echo [Prompt Wiki] Waiting for server to respond...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; for($i=0; $i -lt 60; $i++){ try { Invoke-WebRequest 'http://127.0.0.1:3000' -UseBasicParsing | Out-Null; Start-Process 'http://127.0.0.1:3000'; exit 0 } catch { Start-Sleep -Seconds 1 } }; Write-Host 'Server did not become ready within 60 seconds.'"

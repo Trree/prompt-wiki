@@ -8,7 +8,8 @@
     "dev": "npm run dev -w web",
     "build": "npm run content:index && npm run build -w web",
     "start": "npm run content:index && npm run start -w web",
-    "start:local": "npm run content:index && npm exec --workspace web -- next start -H 127.0.0.1 -p 3000",
+    "start:local": "npm run content:index && npm run start:local:server",
+    "start:local:server": "npm exec --workspace web -- next start -H 127.0.0.1 -p 3000",
     "content:index": "node scripts/build-content-index.mjs",
     "content:check": "node scripts/build-content-index.mjs --check"
   }
