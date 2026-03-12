@@ -22,8 +22,9 @@ if (fs.existsSync(configPath)) {
 const REQUIRED_FIELDS = ["id", "type", "title", "slug", "status", "summary"];
 
 function inferTypeFromPath(filePath) {
-  if (filePath.includes("/skills/")) return "skill";
-  if (filePath.includes("/agents/")) return "agent";
+  const normalizedPath = filePath.replaceAll(path.sep, "/");
+  if (normalizedPath.includes("/skills/")) return "skill";
+  if (normalizedPath.includes("/agents/")) return "agent";
   return "prompt";
 }
 
@@ -90,12 +91,12 @@ function parseScalar(value) {
 }
 
 function parseFrontmatter(raw) {
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n?/);
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n)?/);
   if (!match) {
     return { data: {}, body: raw.trim() };
   }
 
-  const lines = match[1].split("\n");
+  const lines = match[1].split(/\r?\n/);
   const data = {};
   let currentKey = null;
 
